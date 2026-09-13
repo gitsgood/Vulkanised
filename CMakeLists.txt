@@ -15,6 +15,8 @@ find_package(Vulkan REQUIRED)
 # Set source files...
 set(SOURCES
     src/main.cpp
+    src/Utilities.h
+    src/VulkanRenderer.h    src/VulkanRenderer.cpp
 )
 
 # all shader and script files shown in IDE
@@ -22,6 +24,9 @@ set(SOURCES
 
 # Define your executable using the SOURCES variable
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+# Tell CMake this specific target requires C++20
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
 # Explicitly set the subsystem to CONSOLE for Windows, if it's on DEBUG config.
 if(MSVC)

@@ -1,31 +1,67 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/mat4x4.hpp>
+#include <stdio.h>
+#include <stdexcept>
+#include <vector>
+#include <memory>
+#include <atomic>
+#include <string_view>
 
-#include <iostream>
+#include "VulkanRenderer.h"
+
+// Little trick I stole from Rust. Ideally this should be immutable and thread-safe, but at least it is supposed to be somehow thread-safe now. This might come in handy down the line.
+std::atomic<std::shared_ptr<GLFWwindow>> window;
+VulkanRenderer renderer;
+
+static void initWindow(std::string_view wName = "Test Window", const int width = 800, const int height = 600)
+{
+	if(!glfwInit())
+	{
+		throw std::runtime_error("Failed to initialize GLFW");
+	}
+
+	// Set GLFW to not create an OpenGL context
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+	// Create the raw pointer
+	GLFWwindow* rawWindow = glfwCreateWindow(width, height, wName.data(), nullptr, nullptr);
+
+	if (!rawWindow) {
+		throw std::runtime_error("Failed to create GLFW window");
+	}
+
+	// Wrap it in a shared_ptr with a custom deleter
+	// We pass glfwDestroyWindow as the function to call when the ref count hits 0
+	window = std::shared_ptr<GLFWwindow>(rawWindow, glfwDestroyWindow);
+}
+
 
 int main() 
 {
-	glfwInit();
+	// Create window
+	initWindow("Test Window", 800, 600);
 
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Test Window", nullptr, nullptr);
+	// Create Vulkan renderer instance and initialize it with the window
+	if(renderer.init(window.load().get()) == EXIT_FAILURE)
+	{
+		printf("Failed to initialize Vulkan renderer\n");
+		return EXIT_FAILURE;
+	}
 
-	uint32_t extensionCount = 0;
-	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-	printf("Available Vulkan extensions: %i\n", extensionCount);
-
-	while (!glfwWindowShouldClose(window)) 
+	// Loop until closed
+	while (!glfwWindowShouldClose(window.load().get())) 
 	{
 		glfwPollEvents();
 	}
 
-	glfwDestroyWindow(window);
+	renderer.cleanup();
 
-	return 0;
+	// Destroy GLFW window and terminate GLFW
+	glfwDestroyWindow(window.load().get());
+
+	glfwTerminate();
+
+	return EXIT_SUCCESS;
 }
