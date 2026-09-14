@@ -58,10 +58,5 @@ int main()
 
 	renderer.cleanup();
 
-	// Destroy GLFW window and terminate GLFW
-	glfwDestroyWindow(window.load().get());
-
-	glfwTerminate();
-
 	return EXIT_SUCCESS;
 }

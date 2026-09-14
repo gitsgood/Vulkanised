@@ -4,6 +4,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 #include <memory>
@@ -31,11 +32,13 @@ private:
 		VkDevice logicalDevice;
 	} m_MainDevice;
 	VkQueue m_GraphicsQueue;
+	VkDebugUtilsMessengerEXT m_DebugMessenger;
 
 	// Vulkan Functions
 	// - Create functions
 	void createInstance();
 	void createLogicalDevice();
+	void setupDebugMessenger();
 
 	// - Get functions
 	void getPhysicalDevice();
@@ -44,9 +47,16 @@ private:
 	// -- Checker functions
 	bool checkInstanceExtensionSupport(const std::vector<const char*> *checkExtensions);
 	bool checkDeviceSuitable(VkPhysicalDevice device);
+	bool checkValidationLayerSupport();
 
 	// -- Getter functions
 	QueueFamilyIndices getQueueFamilies(VkPhysicalDevice device);
+	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
+		VkDebugUtilsMessageTypeFlagsEXT messageType, 
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
+		void* pUserData);
 };
 
 #endif // !VULKANRENDERER_H
