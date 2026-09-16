@@ -11,6 +11,7 @@
 #include <atomic>
 
 #include "Utilities.h"
+#include "Logger.h"
 
 class VulkanRenderer
 {
@@ -23,6 +24,10 @@ public:
 	~VulkanRenderer();
 
 private:
+	// Logger access
+	std::shared_ptr<Logger> m_Logger;
+
+	// GLFW Window
 	std::atomic<std::shared_ptr<GLFWwindow>> m_Window;
 
 	// Vulkan Components
@@ -50,7 +55,7 @@ private:
 	bool checkValidationLayerSupport();
 
 	// -- Getter functions
-	QueueFamilyIndices getQueueFamilies(VkPhysicalDevice device);
+	Utilities::QueueFamilyIndices getQueueFamilies(VkPhysicalDevice device);
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 

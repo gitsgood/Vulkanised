@@ -11,6 +11,9 @@ int VulkanRenderer::init(GLFWwindow* newWindow)
 		return EXIT_FAILURE;
 	}
 
+	// Initialise logger
+	m_Logger = Logger::getLoggerInstance();
+
 	// Wrap it in a shared_ptr with a custom deleter
 	// We pass glfwDestroyWindow as the function to call when the ref count hits 0
 	m_Window = std::shared_ptr<GLFWwindow>(newWindow, glfwDestroyWindow);
@@ -39,9 +42,9 @@ void VulkanRenderer::cleanup()
 		m_MainDevice.logicalDevice = VK_NULL_HANDLE;
 	}
 	// Debug messenger, surface and instance
-	if (enableValidationLayers && m_DebugMessenger)
+	if (Utilities::enableValidationLayers && m_DebugMessenger)
 	{
-		DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+		Utilities::DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 	if (m_Instance != VK_NULL_HANDLE)
 	{
@@ -62,7 +65,7 @@ VulkanRenderer::~VulkanRenderer()
 void VulkanRenderer::createInstance()
 {
 #ifdef _WIN32
-	if (enableValidationLayers && !checkValidationLayerSupport())
+	if (Utilities::enableValidationLayers && !checkValidationLayerSupport())
 		throw std::runtime_error("validation layers requested, but not available!");
 
 #elif defined(__APPLE__)    //Validation layers on Mac not working atm
@@ -103,7 +106,7 @@ void VulkanRenderer::createInstance()
 	}
 
 	// Add debug extension if validation layers are enabled
-	if (enableValidationLayers)
+	if (Utilities::enableValidationLayers)
 	{
 		instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	}
@@ -119,10 +122,10 @@ void VulkanRenderer::createInstance()
 
 	// Set up validation layers if enabled
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-	if (enableValidationLayers)
+	if (Utilities::enableValidationLayers)
 	{
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
+		createInfo.enabledLayerCount = static_cast<uint32_t>(Utilities::validationLayers.size());
+		createInfo.ppEnabledLayerNames = Utilities::validationLayers.data();
 
 		populateDebugMessengerCreateInfo(debugCreateInfo);
 		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
@@ -143,7 +146,7 @@ void VulkanRenderer::createInstance()
 void VulkanRenderer::createLogicalDevice()
 {
 	// Get the queue family indices for the chosen Physical device
-	QueueFamilyIndices indices = getQueueFamilies(m_MainDevice.physicalDevice);
+	Utilities::QueueFamilyIndices indices = getQueueFamilies(m_MainDevice.physicalDevice);
 
 	// Queue the logical device needs to create and info to do so (only 1 for now, will add more later!)
 	VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -181,13 +184,13 @@ void VulkanRenderer::createLogicalDevice()
 
 void VulkanRenderer::setupDebugMessenger()
 {
-	if (!enableValidationLayers)
+	if (!Utilities::enableValidationLayers)
 		return;
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	populateDebugMessengerCreateInfo(createInfo);
 
-	if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
+	if (Utilities::CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to set up debug messenger!");
 	}
@@ -266,7 +269,7 @@ bool VulkanRenderer::checkDeviceSuitable(VkPhysicalDevice device)
 	//VkPhysicalDeviceFeatures deviceFeatures;
 	//vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-	QueueFamilyIndices indices = getQueueFamilies(device);
+	Utilities::QueueFamilyIndices indices = getQueueFamilies(device);
 
 	return indices.isValid();
 }
@@ -279,7 +282,7 @@ bool VulkanRenderer::checkValidationLayerSupport()
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-	for (const char* layerName : validationLayers)
+	for (const char* layerName : Utilities::validationLayers)
 	{
 		bool layerFound = false;
 
@@ -299,9 +302,9 @@ bool VulkanRenderer::checkValidationLayerSupport()
 	return true;
 }
 
-QueueFamilyIndices VulkanRenderer::getQueueFamilies(VkPhysicalDevice device)
+Utilities::QueueFamilyIndices VulkanRenderer::getQueueFamilies(VkPhysicalDevice device)
 {
-	QueueFamilyIndices indices;
+	Utilities::QueueFamilyIndices indices;
 
 	// Get all queue family property info for the given device
 	uint32_t queueFamilyCount{ 0 };

@@ -16,14 +16,14 @@ VulkanRenderer renderer;
 
 static void initWindow(std::string_view wName = "Test Window", const int width = 800, const int height = 600)
 {
-	if(!glfwInit())
+	if(glfwInit() == GLFW_FALSE)
 	{
 		throw std::runtime_error("Failed to initialize GLFW");
 	}
 
 	// Set GLFW to not create an OpenGL context
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 	// Create the raw pointer
 	GLFWwindow* rawWindow = glfwCreateWindow(width, height, wName.data(), nullptr, nullptr);
@@ -40,6 +40,10 @@ static void initWindow(std::string_view wName = "Test Window", const int width =
 
 int main() 
 {
+	// Set the initial timestamp before anything
+	Utilities::getStartTime();
+	Logger::getLoggerInstance()->logText("Vulkanised hath started!", Logger::LogType::HIGHLIGHT);
+
 	// Create window
 	initWindow("Test Window", 800, 600);
 
@@ -49,6 +53,9 @@ int main()
 		printf("Failed to initialize Vulkan renderer\n");
 		return EXIT_FAILURE;
 	}
+
+	// We will test the logger's ability to be a singleton.
+	std::atomic<std::shared_ptr<Logger>> logger = Logger::getLoggerInstance();
 
 	// Loop until closed
 	while (!glfwWindowShouldClose(window.load().get())) 

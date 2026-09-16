@@ -86,3 +86,6 @@ CMakePresets.json
 /external/glfw-3.5.1/CONTRIBUTORS.md
 /external/glfw-3.5.1/LICENSE.md
 /external/glfw-3.5.1/README.md
+
+# Log files probably shouldn't be tracked
+*.log

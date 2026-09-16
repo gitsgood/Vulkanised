@@ -12,10 +12,31 @@ add_subdirectory(external/glfw-3.5.1)
 # Ask CMake to find the Vulkan SDK installed on the computer
 find_package(Vulkan REQUIRED)
 
+# Detect build environment based on CMAKE_BINARY_DIR
+# Used to set correct PATH and some clean up
+if(${CMAKE_BINARY_DIR} MATCHES ".*out/.*")
+    add_compile_definitions(BUILD_ENV_VISUAL_STUDIO)
+    message(STATUS "=== Visual Studio detected ===")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/build")
+        file(REMOVE_RECURSE "${CMAKE_CURRENT_SOURCE_DIR}/build")
+    endif()
+elseif(${CMAKE_BINARY_DIR} MATCHES ".*build/.*")
+    add_compile_definitions(BUILD_ENV_QTCREATOR)
+    message(STATUS "=== Qt Creator detected ===")
+    #Deleting preset files not used in Qt - generated in VS 2022
+    #This should not fail even if the files are not present
+    file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/CMakePresets.json")
+    file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/CMakeUserPresets.json")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/out")
+        file(REMOVE_RECURSE "${CMAKE_CURRENT_SOURCE_DIR}/out")
+    endif()
+endif()
+
 # Set source files...
 set(SOURCES
     src/main.cpp
     src/Utilities.h
+    src/Logger.h            src/Logger.cpp
     src/VulkanRenderer.h    src/VulkanRenderer.cpp
 )
 
