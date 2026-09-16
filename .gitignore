@@ -79,13 +79,29 @@ CMakePresets.json
 /build*/
 
 # The glfw folder has a few too many things...
-/external/glfw-3.5.1/CMake/
+#/external/glfw-3.5.1/CMake/    # Seems like this was not a good idea...
 /external/glfw-3.5.1/docs/
 /external/glfw-3.5.1/examples/
 /external/glfw-3.5.1/tests/
-/external/glfw-3.5.1/CONTRIBUTORS.md
-/external/glfw-3.5.1/LICENSE.md
+#/external/glfw-3.5.1/CONTRIBUTORS.md   # Probably a good idea to not publish this without the dependency's contributors
+#/external/glfw-3.5.1/LICENSE.md        # And especially not without the license...
 /external/glfw-3.5.1/README.md
+
+# The glaze folder is looking a little too buttery and its contents a little too juicy...
+/external/glaze/.devcontainer/
+/external/glaze/.github/
+/external/glaze/benchmarks/
+/external/glaze/docs/
+/external/glaze/examples/
+/external/glaze/tests/
+/external/glaze/util/
+/external/glaze/.clang-format
+/external/glaze/.editorconfig
+/external/glaze/.gitattributes
+/external/glaze/.gitignore
+/external/glaze/.packit.yml
+/external/glaze/mkdocs.yml
+/external/glaze/ordered_map_results.md
 
 # Log files probably shouldn't be tracked
 *.log

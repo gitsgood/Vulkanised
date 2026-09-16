@@ -55,7 +55,7 @@ int main()
 	}
 
 	// We will test the logger's ability to be a singleton.
-	std::atomic<std::shared_ptr<Logger>> logger = Logger::getLoggerInstance();
+	std::shared_ptr<Logger> logger = Logger::getLoggerInstance();
 
 	// Loop until closed
 	while (!glfwWindowShouldClose(window.load().get())) 

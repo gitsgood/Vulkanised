@@ -9,6 +9,9 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 # Tell CMake to look inside the GLFW folder
 add_subdirectory(external/glfw-3.5.1)
 
+# Glaze is a fast json library for cpp. It requires c++ 23
+add_subdirectory(external/glaze)
+
 # Ask CMake to find the Vulkan SDK installed on the computer
 find_package(Vulkan REQUIRED)
 
@@ -58,4 +61,4 @@ if(MSVC)
 endif()
 
 # Link the libraries
-target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan)
+target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze)

@@ -10,6 +10,8 @@
 #include <format>
 #include <chrono>
 
+//#include <glaze/glaze.hpp>
+
 #include "Utilities.h"
 
 namespace Color
@@ -27,8 +29,13 @@ class Logger
 public:
     static std::shared_ptr<Logger> getLoggerInstance()
     {
-        static std::shared_ptr<Logger> loggerSingleton{ new Logger()};
+        static std::shared_ptr<Logger> loggerSingleton{ new Logger() };
         return loggerSingleton;
+    }
+
+    ~Logger()
+    {
+        logText("Goodnight logger...", LogType::HIGHLIGHT);
     }
 
     enum class LogType
@@ -50,15 +57,20 @@ private:
     // One ofstream instance.
     std::ofstream m_File{ std::filesystem::path(Utilities::PATH) / "VulkanisedLog.log", std::ios::app };
 
+    // Settings state, stored in struct (which is also used for json parsing)
+    struct LogSettings {
+        bool logToFile{ true };
+        bool deleteLogFileAtStart{ true };
+        bool logToConsole{ true };
+    } m_LoggerSettings;
+
 	// Private constructors to strictly control instantiation of the class.
     Logger()
     {
-        //std::cout << Color::Error << "ERROR: System failure! " << Color::Reset << std::endl;
-        //std::cout << Color::Warning << "WARNING: Low disk space. " << Color::Highlight <<std::endl;
-        logText("I breath...", LogType::ERR);
-        logText("I shall prepare my log file...", LogType::HIGHLIGHT);
-        logText("Thou hast been warned!", LogType::WARNING);
+        logText("Logger initialised...", LogType::HIGHLIGHT);
+        std::filesystem::path jsonSettingsFilePath{ std::filesystem::path(Utilities::PATH) / "VulkanisedLoggerSettings.json" };
 
+        //glz::error_ctx settingsReadSuccess = glz::read_file_json(m_LoggerSettings, jsonSettingsFilePath.string());
     }
 
     // Delete the copy constructor and assignment operator, since its a static class and shouldn't exist anyways.

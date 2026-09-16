@@ -47,12 +47,13 @@ void Logger::logText(std::string_view input, LogType inColor, std::source_locati
 
 std::string Logger::getTimestamp()
 {
-    auto now = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - Utilities::getStartTime());
+    std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - Utilities::getStartTime());
 
-    double seconds = elapsed.count() / 1000.0;
+    double elapsedSeconds = elapsed.count() / 1000.0;
 
-    auto systemNow = std::chrono::system_clock::now();
-    return std::format("[{:%H:%M:%S}] [{:.6f}s] ", systemNow, seconds);
+    std::chrono::system_clock::time_point systemNow = std::chrono::system_clock::now();
+
+    return std::format("[{:%H:%M:%S}] [{:.6f}s] ", systemNow, elapsedSeconds);
 }
