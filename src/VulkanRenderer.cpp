@@ -11,9 +11,6 @@ int VulkanRenderer::init(GLFWwindow* newWindow)
 		return EXIT_FAILURE;
 	}
 
-	// Initialise logger
-	m_Logger = Logger::getLoggerInstance();
-
 	// Wrap it in a shared_ptr with a custom deleter
 	// We pass glfwDestroyWindow as the function to call when the ref count hits 0
 	m_Window = std::shared_ptr<GLFWwindow>(newWindow, glfwDestroyWindow);

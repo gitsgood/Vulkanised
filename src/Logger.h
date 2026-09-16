@@ -10,9 +10,16 @@
 #include <format>
 #include <chrono>
 
-//#include <glaze/glaze.hpp>
+#include "glaze/glaze.hpp"
 
 #include "Utilities.h"
+
+// The macros we will use henceforth to log ANYTHING. We really did learn from the best
+#define LOGGER(type, fmt, ...)  Logger::getLoggerInstance()->logText(type, std::source_location::current(), fmt, ##__VA_ARGS__)
+#define LOG(fmt, ...)           Logger::getLoggerInstance()->logText(Logger::LogType::LOG, std::source_location::current(), fmt, ##__VA_ARGS__)
+#define LOGH(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::HIGHLIGHT, std::source_location::current(), fmt, ##__VA_ARGS__)
+#define LOGW(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::WARNING, std::source_location::current(), fmt, ##__VA_ARGS__)
+#define LOGE(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::ERR, std::source_location::current(), fmt, ##__VA_ARGS__)
 
 namespace Color
 {
@@ -24,6 +31,10 @@ namespace Color
     constexpr const char* Timestamp{ "\033[48;2;150;75;0;38;2;7;35;55m" };      // Blue-ish on brown background
 }
 
+/*
+* Logger class. No matter what, the logger itself can never use the log macros for itself. Macros are for everyone else.
+* Thank you for your attention to this matter...
+*/
 class Logger
 {
 public:
@@ -35,7 +46,9 @@ public:
 
     ~Logger()
     {
-        logText("Goodnight logger...", LogType::HIGHLIGHT);
+        //writeSettingsFile();  // For now we will only write the settings when we try to read them (if they dont exist, and once). If we make an editor we can refactor this later.
+        logText(LogType::HIGHLIGHT, std::source_location::current(), "Goodnight logger...");
+        m_File << Utilities::LOG_SEPARATION;
     }
 
     enum class LogType
@@ -46,16 +59,30 @@ public:
         ERR
     };
 
-    void logText(std::string_view input, LogType inColor = LogType::LOG, std::source_location callSite = std::source_location::current());
-
     std::string getTimestamp();
+
+    // I want to be able to log things with modern formatting abilities. This here function takes care of it.
+    template <typename... Args>
+    void logText(LogType type, std::source_location loc, std::string_view fmt, Args&&... args)
+    {
+        std::string formattedMessage = std::vformat(fmt, std::make_format_args(args...));
+        logInternal(formattedMessage, type, loc);
+    }
+
+    // A simple overload in case I don't feel like specifying what LogType I want, without needing to mess with the sensitive parameter structure...
+    template <typename... Args>
+    void logText(std::source_location loc, std::string_view fmt, Args&&... args)
+    {
+        // We simply forward everything to the first version, adding a default of LogType::LOG
+        logText(LogType::LOG, loc, fmt, std::forward<Args>(args)...);
+    }
 
 private:
     // This is supposed to lock access to the logger if one thread accesses it (so for example, another thread wont access it at the same time).
     std::mutex m_Mutex;
 
     // One ofstream instance.
-    std::ofstream m_File{ std::filesystem::path(Utilities::PATH) / "VulkanisedLog.log", std::ios::app };
+    std::ofstream m_File;
 
     // Settings state, stored in struct (which is also used for json parsing)
     struct LogSettings {
@@ -64,13 +91,28 @@ private:
         bool logToConsole{ true };
     } m_LoggerSettings;
 
+    // Methods for our eyes only...
+    void readSettingsFile();
+    void writeSettingsFile();
+
+    void printBooleans();
+
+    void logInternal(const std::string& input, LogType inColor, std::source_location callSite);
+
 	// Private constructors to strictly control instantiation of the class.
     Logger()
     {
-        logText("Logger initialised...", LogType::HIGHLIGHT);
-        std::filesystem::path jsonSettingsFilePath{ std::filesystem::path(Utilities::PATH) / "VulkanisedLoggerSettings.json" };
-
-        //glz::error_ctx settingsReadSuccess = glz::read_file_json(m_LoggerSettings, jsonSettingsFilePath.string());
+        readSettingsFile();
+        if (!m_LoggerSettings.deleteLogFileAtStart)
+        {
+            m_File.open(std::filesystem::path(Utilities::PATH) / "VulkanisedLog.log", std::ios::app);
+        }
+        else
+        {
+            m_File.open(std::filesystem::path(Utilities::PATH) / "VulkanisedLog.log");
+        }
+        printBooleans();
+        logText(LogType::HIGHLIGHT, std::source_location::current(), "Logger initialised...");
     }
 
     // Delete the copy constructor and assignment operator, since its a static class and shouldn't exist anyways.

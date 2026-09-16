@@ -42,7 +42,7 @@ int main()
 {
 	// Set the initial timestamp before anything
 	Utilities::getStartTime();
-	Logger::getLoggerInstance()->logText("Vulkanised hath started!", Logger::LogType::HIGHLIGHT);
+	LOGH("Vulkanised hath started!");
 
 	// Create window
 	initWindow("Test Window", 800, 600);
@@ -53,9 +53,6 @@ int main()
 		printf("Failed to initialize Vulkan renderer\n");
 		return EXIT_FAILURE;
 	}
-
-	// We will test the logger's ability to be a singleton.
-	std::shared_ptr<Logger> logger = Logger::getLoggerInstance();
 
 	// Loop until closed
 	while (!glfwWindowShouldClose(window.load().get())) 

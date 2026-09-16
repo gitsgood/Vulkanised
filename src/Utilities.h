@@ -55,6 +55,8 @@ namespace Utilities
     inline constexpr const char* PATH = "../../"; // fallback e.g. Mac
 #endif
 
+    inline constexpr const char* LOG_SEPARATION = "\n------------------------------------------------------------\n\n";
+
     // Static local time. We can use this to log order of operations, as well as their speed. Initialised at the first line of main and stays that way for the rest of runtime.
     inline std::chrono::steady_clock::time_point getStartTime() {
         static std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();

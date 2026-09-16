@@ -24,9 +24,6 @@ public:
 	~VulkanRenderer();
 
 private:
-	// Logger access
-	std::shared_ptr<Logger> m_Logger;
-
 	// GLFW Window
 	std::atomic<std::shared_ptr<GLFWwindow>> m_Window;
 

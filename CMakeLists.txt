@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.19)
 project(Vulkanised)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Force GLFW not to build its own tests, examples, or docs
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -49,8 +51,8 @@ set(SOURCES
 # Define your executable using the SOURCES variable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Tell CMake this specific target requires C++20
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+# Tell CMake this specific target requires C++23
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
 # Explicitly set the subsystem to CONSOLE for Windows, if it's on DEBUG config.
 if(MSVC)
