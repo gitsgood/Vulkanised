@@ -95,6 +95,7 @@ private:
     void readSettingsFile();
     void writeSettingsFile();
 
+    // For debugging purposes. Could eventually remove this completely down the line.
     void printBooleans();
 
     void logInternal(const std::string& input, LogType inColor, std::source_location callSite);
@@ -111,7 +112,7 @@ private:
         {
             m_File.open(std::filesystem::path(Utilities::PATH) / "VulkanisedLog.log");
         }
-        printBooleans();
+        //printBooleans();
         logText(LogType::HIGHLIGHT, std::source_location::current(), "Logger initialised...");
     }
 

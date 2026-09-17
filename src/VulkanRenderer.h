@@ -9,6 +9,7 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <set>
 
 #include "Utilities.h"
 #include "Logger.h"
@@ -34,13 +35,16 @@ private:
 		VkDevice logicalDevice;
 	} m_MainDevice;
 	VkQueue m_GraphicsQueue;
+	VkQueue m_PresentationQueue;
 	VkDebugUtilsMessengerEXT m_DebugMessenger;
+	VkSurfaceKHR m_Surface;
 
 	// Vulkan Functions
 	// - Create functions
 	void createInstance();
 	void createLogicalDevice();
 	void setupDebugMessenger();
+	void createSurface();
 
 	// - Get functions
 	void getPhysicalDevice();
@@ -48,8 +52,10 @@ private:
 	// - Support functions
 	// -- Checker functions
 	bool checkInstanceExtensionSupport(const std::vector<const char*> *checkExtensions);
-	bool checkDeviceSuitable(VkPhysicalDevice device);
+	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	bool checkValidationLayerSupport();
+	bool checkDeviceSuitable(VkPhysicalDevice device);
+	
 
 	// -- Getter functions
 	Utilities::QueueFamilyIndices getQueueFamilies(VkPhysicalDevice device);
@@ -59,6 +65,7 @@ private:
 		VkDebugUtilsMessageTypeFlagsEXT messageType, 
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
 		void* pUserData);
+	Utilities::SwapchainDetails getSwapchainDetails(VkPhysicalDevice device);
 };
 
 #endif // !VULKANRENDERER_H

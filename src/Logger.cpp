@@ -24,7 +24,7 @@ void Logger::readSettingsFile()
         writeSettingsFile(); 
         logText(LogType::WARNING, std::source_location::current(), "Logger settings not found, creating default...");
     }
-    logText(LogType::HIGHLIGHT, std::source_location::current(), "{}", jsonBuffer);
+    //logText(LogType::HIGHLIGHT, std::source_location::current(), "{}", jsonBuffer);
 }
 
 void Logger::writeSettingsFile()

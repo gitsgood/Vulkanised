@@ -42,6 +42,8 @@ int main()
 {
 	// Set the initial timestamp before anything
 	Utilities::getStartTime();
+
+	// Initialises the logger (necessary, since it uses lazy initialisation), while also "announcing" the initialisation of the program.
 	LOGH("Vulkanised hath started!");
 
 	// Create window

@@ -34,16 +34,28 @@ namespace Utilities
         }
     }
 
+    const std::vector<const char*> deviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
+
     // Indices (locations) of queue families (if they exist at all)
     struct QueueFamilyIndices
     {
-        int graphicsFamily = -1;	// Location of the graphics queue family
+        int graphicsFamily{ -1 };	    // Location of the graphics queue family
+        int presentationFamily{ -1 };   // Location of presentation queue family
 
         // Check if queue families are valid
         bool isValid() const
         {
-            return graphicsFamily >= 0;
+            return graphicsFamily >= 0 && presentationFamily >= 0;
         }
+    };
+
+    struct SwapchainDetails
+    {
+        VkSurfaceCapabilitiesKHR surfaceCapabilities;       // Surface properties, e.g. image, size/extent
+        std::vector<VkSurfaceFormatKHR> formats;            // Surface image formats, e.g. RBGA and size of each color
+        std::vector<VkPresentModeKHR> presentationModes;    // How images should be presented to screen
     };
 
     // Path constants. The definitions are set up in the CMakeLists file. It's where the logic on how the compiler knows lies.
