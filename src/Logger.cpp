@@ -1,10 +1,12 @@
 #include "Logger.h"
 
+using namespace Vulkanised;
+
 std::string Logger::getTimestamp()
 {
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 
-    std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - Utilities::getStartTime());
+    std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - Utilities::Time::getStartTime());
 
     double elapsedSeconds = elapsed.count() / 1000.0;
 
@@ -15,7 +17,7 @@ std::string Logger::getTimestamp()
 
 void Logger::readSettingsFile()
 {
-    std::filesystem::path settingsPath{ std::filesystem::path(Utilities::PATH) / "VulkanisedLoggerSettings.json" };
+    std::filesystem::path settingsPath{ std::filesystem::path(Utilities::File::c_Path) / Utilities::File::c_LogSettingsFileName };
     std::string jsonBuffer{ "" };
     glz::error_ctx settingsReadFailure = glz::read_file_json(m_LoggerSettings, settingsPath.string(), jsonBuffer);
     if (!settingsReadFailure) { logText(LogType::HIGHLIGHT, std::source_location::current(), "Succesfully read the json..."); }
@@ -29,7 +31,7 @@ void Logger::readSettingsFile()
 
 void Logger::writeSettingsFile()
 {
-    std::filesystem::path settingsPath{ std::filesystem::path(Utilities::PATH) / "VulkanisedLoggerSettings.json" };
+    std::filesystem::path settingsPath{ std::filesystem::path(Utilities::File::c_Path) / Utilities::File::c_LogSettingsFileName };
     std::string buffer = glz::write_json(m_LoggerSettings).value_or("error");
     std::ofstream jsonFile;
     jsonFile.open(settingsPath);
@@ -68,6 +70,10 @@ void Logger::logInternal(const std::string& input, LogType inColor, std::source_
     case LogType::HIGHLIGHT:
         colorCode = Color::Highlight;
         break;
+    case LogType::TIMING:
+        colorCode = Color::TimedFunc;
+        prefix = " TIMING: ";
+        break;
     case LogType::WARNING:
         colorCode = Color::Warning;
         prefix = " WARNING: ";
@@ -96,7 +102,8 @@ void Logger::logInternal(const std::string& input, LogType inColor, std::source_
 #else
     if (m_LoggerSettings.logToConsole)
     {
-        std::cout << Color::Timestamp << timestamp << Color::FunctionNames << functionName << Color::Reset << colorCode << message << Color::Reset << "\n";
+        //std::cout << Color::Timestamp << timestamp << Color::FunctionNames << functionName << Color::Reset << colorCode << message << Color::Reset << "\n";
+        std::println("{}{}{}{}{}{}{}{}", Color::Timestamp, timestamp, Color::FunctionNames, functionName, Color::Reset, colorCode, message, Color::Reset);
     }
 #endif
 

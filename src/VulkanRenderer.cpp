@@ -1,5 +1,7 @@
 #include "VulkanRenderer.h"
 
+using namespace Vulkanised;
+
 VulkanRenderer::VulkanRenderer()
 {
 }
@@ -40,9 +42,9 @@ void VulkanRenderer::cleanup()
 		m_MainDevice.logicalDevice = VK_NULL_HANDLE;
 	}
 	// Debug messenger, surface and instance
-	if (Utilities::enableValidationLayers && m_DebugMessenger)
+	if (Utilities::Vulkan::enableValidationLayers && m_DebugMessenger)
 	{
-		Utilities::DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+		Utilities::Vulkan::DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 	if (m_Surface != VK_NULL_HANDLE)
 	{
@@ -68,7 +70,7 @@ VulkanRenderer::~VulkanRenderer()
 void VulkanRenderer::createInstance()
 {
 #ifdef _WIN32
-	if (Utilities::enableValidationLayers && !checkValidationLayerSupport())
+	if (Utilities::Vulkan::enableValidationLayers && !checkValidationLayerSupport())
 		throw std::runtime_error("validation layers requested, but not available!");
 
 #elif defined(__APPLE__)    //Validation layers on Mac not working atm
@@ -109,7 +111,7 @@ void VulkanRenderer::createInstance()
 	}
 
 	// Add debug extension if validation layers are enabled
-	if (Utilities::enableValidationLayers)
+	if (Utilities::Vulkan::enableValidationLayers)
 	{
 		instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	}
@@ -125,10 +127,10 @@ void VulkanRenderer::createInstance()
 
 	// Set up validation layers if enabled
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-	if (Utilities::enableValidationLayers)
+	if (Utilities::Vulkan::enableValidationLayers)
 	{
-		createInfo.enabledLayerCount = static_cast<uint32_t>(Utilities::validationLayers.size());
-		createInfo.ppEnabledLayerNames = Utilities::validationLayers.data();
+		createInfo.enabledLayerCount = static_cast<uint32_t>(Utilities::Vulkan::validationLayers.size());
+		createInfo.ppEnabledLayerNames = Utilities::Vulkan::validationLayers.data();
 
 		populateDebugMessengerCreateInfo(debugCreateInfo);
 		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
@@ -149,7 +151,7 @@ void VulkanRenderer::createInstance()
 void VulkanRenderer::createLogicalDevice()
 {
 	// Get the queue family indices for the chosen Physical device
-	Utilities::QueueFamilyIndices indices = getQueueFamilies(m_MainDevice.physicalDevice);
+	Utilities::Vulkan::QueueFamilyIndices indices = getQueueFamilies(m_MainDevice.physicalDevice);
 
 	// Vector for queue creation information, and set for family indices
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -173,8 +175,8 @@ void VulkanRenderer::createLogicalDevice()
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());							// Number of Queue Create infos
 	deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();													// List of queue create infos so device can create required queues
-	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(Utilities::deviceExtensions.size());				// Number of enabled logical device extensions
-	deviceCreateInfo.ppEnabledExtensionNames = Utilities::deviceExtensions.data();									// List of enabled logical device extensions
+	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(Utilities::Vulkan::deviceExtensions.size());				// Number of enabled logical device extensions
+	deviceCreateInfo.ppEnabledExtensionNames = Utilities::Vulkan::deviceExtensions.data();									// List of enabled logical device extensions
 
 	// Physical Device Features the logical device will be using
 	VkPhysicalDeviceFeatures deviceFeatures{};
@@ -196,13 +198,13 @@ void VulkanRenderer::createLogicalDevice()
 
 void VulkanRenderer::setupDebugMessenger()
 {
-	if (!Utilities::enableValidationLayers)
+	if (!Utilities::Vulkan::enableValidationLayers)
 		return;
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	populateDebugMessengerCreateInfo(createInfo);
 
-	if (Utilities::CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
+	if (Utilities::Vulkan::CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to set up debug messenger!");
 	}
@@ -296,7 +298,7 @@ bool VulkanRenderer::checkDeviceExtensionSupport(VkPhysicalDevice device)
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, extensions.data());
 
 	// Check for extension
-	for (const auto& deviceExtension : Utilities::deviceExtensions)
+	for (const auto& deviceExtension : Utilities::Vulkan::deviceExtensions)
 	{
 		bool hasExtension{ false };
 		for (const auto& extension : extensions)
@@ -326,14 +328,14 @@ bool VulkanRenderer::checkDeviceSuitable(VkPhysicalDevice device)
 	//VkPhysicalDeviceFeatures deviceFeatures;
 	//vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-	Utilities::QueueFamilyIndices indices = getQueueFamilies(device);
+	Utilities::Vulkan::QueueFamilyIndices indices = getQueueFamilies(device);
 
 	bool areExtensionsSupported = checkDeviceExtensionSupport(device);
 
 	bool isSwapchainValid{ false };
 	if (areExtensionsSupported)
 	{
-		Utilities::SwapchainDetails swapchainDetails = getSwapchainDetails(device);
+		Utilities::Vulkan::SwapchainDetails swapchainDetails = getSwapchainDetails(device);
 		isSwapchainValid = !swapchainDetails.presentationModes.empty() && !swapchainDetails.formats.empty();
 	}
 
@@ -348,7 +350,7 @@ bool VulkanRenderer::checkValidationLayerSupport()
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-	for (const char* layerName : Utilities::validationLayers)
+	for (const char* layerName : Utilities::Vulkan::validationLayers)
 	{
 		bool layerFound = false;
 
@@ -368,9 +370,9 @@ bool VulkanRenderer::checkValidationLayerSupport()
 	return true;
 }
 
-Utilities::QueueFamilyIndices VulkanRenderer::getQueueFamilies(VkPhysicalDevice device)
+Utilities::Vulkan::QueueFamilyIndices VulkanRenderer::getQueueFamilies(VkPhysicalDevice device)
 {
-	Utilities::QueueFamilyIndices indices;
+	Utilities::Vulkan::QueueFamilyIndices indices;
 
 	// Get all queue family property info for the given device
 	uint32_t queueFamilyCount{ 0 };
@@ -428,9 +430,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderer::debugCallback(VkDebugUtilsMessage
 	return VK_FALSE;
 }
 
-Utilities::SwapchainDetails VulkanRenderer::getSwapchainDetails(VkPhysicalDevice device)
+Utilities::Vulkan::SwapchainDetails VulkanRenderer::getSwapchainDetails(VkPhysicalDevice device)
 {
-	Utilities::SwapchainDetails swapchainDetails;
+	Utilities::Vulkan::SwapchainDetails swapchainDetails;
 
 	// -- CAPABILITIES --
 	// Get the surface capabilities for the given surface on the given physical device

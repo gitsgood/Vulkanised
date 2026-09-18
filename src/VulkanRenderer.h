@@ -14,6 +14,8 @@
 #include "Utilities.h"
 #include "Logger.h"
 
+namespace Vulkanised
+{
 class VulkanRenderer
 {
 public:
@@ -51,21 +53,22 @@ private:
 
 	// - Support functions
 	// -- Checker functions
-	bool checkInstanceExtensionSupport(const std::vector<const char*> *checkExtensions);
+	bool checkInstanceExtensionSupport(const std::vector<const char*>* checkExtensions);
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	bool checkValidationLayerSupport();
 	bool checkDeviceSuitable(VkPhysicalDevice device);
-	
+
 
 	// -- Getter functions
-	Utilities::QueueFamilyIndices getQueueFamilies(VkPhysicalDevice device);
+	Utilities::Vulkan::QueueFamilyIndices getQueueFamilies(VkPhysicalDevice device);
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
-		VkDebugUtilsMessageTypeFlagsEXT messageType, 
-		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData);
-	Utilities::SwapchainDetails getSwapchainDetails(VkPhysicalDevice device);
+	Utilities::Vulkan::SwapchainDetails getSwapchainDetails(VkPhysicalDevice device);
 };
+}
 
 #endif // !VULKANRENDERER_H

@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <mutex>
-#include <format>
+#include <print>            // Also includes format somewhere in there
 #include <chrono>
 
 #include "glaze/glaze.hpp"
@@ -20,16 +20,20 @@
 #define LOGH(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::HIGHLIGHT, std::source_location::current(), fmt, ##__VA_ARGS__)
 #define LOGW(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::WARNING, std::source_location::current(), fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::ERR, std::source_location::current(), fmt, ##__VA_ARGS__)
+#define LOGT(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::TIMING, std::source_location::current(), fmt, ##__VA_ARGS__)
 
-namespace Color
+namespace Vulkanised
 {
-    constexpr const char* Reset{ "\033[0m" };                                   // Resets console output to default color
-    constexpr const char* Error{ "\033[48;2;230;0;38;38;2;0;230;192m" };        // Green-ish on red background
-    constexpr const char* Warning{ "\033[48;2;230;226;0;38;2;0;4;230m" };       // Blue on yellow background
-    constexpr const char* Highlight{ "\033[48;2;0;183;235;38;2;235;52;0m" };    // Red-ish on cyan background
-    constexpr const char* FunctionNames{ "\033[48;2;255;255;255;38;2;0;0;0m" }; // Black on white background
-    constexpr const char* Timestamp{ "\033[48;2;150;75;0;38;2;7;35;55m" };      // Blue-ish on brown background
-}
+    namespace Color
+    {
+        constexpr const char* Reset{ "\033[0m" };                                   // Resets console output to default color
+        constexpr const char* Error{ "\033[48;2;230;0;38;38;2;0;230;192m" };        // Green-ish on red background
+        constexpr const char* Warning{ "\033[48;2;230;226;0;38;2;0;4;230m" };       // Blue on yellow background
+        constexpr const char* Highlight{ "\033[48;2;0;183;235;38;2;235;52;0m" };    // Red-ish on cyan background
+        constexpr const char* FunctionNames{ "\033[48;2;255;255;255;38;2;0;0;0m" }; // Black on white background
+        constexpr const char* Timestamp{ "\033[48;2;150;75;0;38;2;7;35;55m" };      // Blue-ish on brown background
+        constexpr const char* TimedFunc{ "\033[48;2;0;255;20;38;2;7;35;55m" };      // Pink-ish on green background
+    }
 
 /*
 * Logger class. No matter what, the logger itself can never use the log macros for itself. Macros are for everyone else.
@@ -48,13 +52,14 @@ public:
     {
         //writeSettingsFile();  // For now we will only write the settings when we try to read them (if they dont exist, and once). If we make an editor we can refactor this later.
         logText(LogType::HIGHLIGHT, std::source_location::current(), "Goodnight logger...");
-        m_File << Utilities::LOG_SEPARATION;
+        m_File << Utilities::File::c_LogSeparation;
     }
 
     enum class LogType
     {
         LOG = 0,
         HIGHLIGHT,
+        TIMING,
         WARNING,
         ERR
     };
@@ -78,7 +83,7 @@ public:
     }
 
 private:
-    // This is supposed to lock access to the logger if one thread accesses it (so for example, another thread wont access it at the same time).
+    // This is supposed to lock access to the logger if one thread accesses the log function (so for example, another thread wont access it at the same time).
     std::mutex m_Mutex;
 
     // One ofstream instance.
@@ -100,17 +105,17 @@ private:
 
     void logInternal(const std::string& input, LogType inColor, std::source_location callSite);
 
-	// Private constructors to strictly control instantiation of the class.
+    // Private constructors to strictly control instantiation of the class.
     Logger()
     {
         readSettingsFile();
         if (!m_LoggerSettings.deleteLogFileAtStart)
         {
-            m_File.open(std::filesystem::path(Utilities::PATH) / "VulkanisedLog.log", std::ios::app);
+            m_File.open(std::filesystem::path(Utilities::File::c_Path) / Utilities::File::c_LogFileName, std::ios::app);
         }
         else
         {
-            m_File.open(std::filesystem::path(Utilities::PATH) / "VulkanisedLog.log");
+            m_File.open(std::filesystem::path(Utilities::File::c_Path) / Utilities::File::c_LogFileName);
         }
         //printBooleans();
         logText(LogType::HIGHLIGHT, std::source_location::current(), "Logger initialised...");
@@ -124,5 +129,6 @@ private:
     Logger(Logger&&) = delete;
     Logger& operator=(Logger&&) = delete;
 };
+}
 
 #endif // !LOGGER_H

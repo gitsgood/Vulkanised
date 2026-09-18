@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.31)
 project(Vulkanised)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -41,6 +41,7 @@ endif()
 set(SOURCES
     src/main.cpp
     src/Utilities.h
+    src/utils/VulkanUtils.h src/utils/TimeUtils.h   src/utils/FileUtils.h
     src/Logger.h            src/Logger.cpp
     src/VulkanRenderer.h    src/VulkanRenderer.cpp
 )
@@ -59,6 +60,7 @@ if(MSVC)
     target_link_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:Debug>:/SUBSYSTEM:CONSOLE>
         $<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup>
+        #$<$<CONFIG:Release>:/SUBSYSTEM:CONSOLE>    # For comparing debug and release speed with console output...
     )
 endif()
 
