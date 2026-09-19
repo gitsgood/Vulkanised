@@ -47,10 +47,13 @@ set(SOURCES
 )
 
 # all shader and script files shown in IDE
-# file(GLOB SHADER_FILES)
+file(GLOB SHADER_FILES
+    "src/shaders/*.frag"
+    "src/shaders/*.vert"
+)
 
 # Define your executable using the SOURCES variable
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${SHADER_FILES})
 
 # Tell CMake this specific target requires C++23
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
@@ -66,3 +69,21 @@ endif()
 
 # Link the libraries
 target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze)
+
+# Shader compilation, hopefully cross-platform
+if(APPLE)
+    add_custom_target(CompileShaders
+        COMMENT "Compiling Vulkan shaders for macOS"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
+        COMMAND bash CompileShadersMac.sh   # Will need to double check what CompileShadersMac.sh does and adapt it
+    )
+elseif(MSVC)
+    add_custom_target(CompileShaders
+        COMMENT "Compiling Vulkan shaders for Windows"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
+        COMMAND "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe" -V "shader.vert" -o "vert.spv"
+        COMMAND "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe" -V "shader.frag" -o "frag.spv"
+    )
+endif()
+
+add_dependencies(${PROJECT_NAME} CompileShaders)
