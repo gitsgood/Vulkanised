@@ -88,9 +88,10 @@ void VulkanRenderer::createInstance()
 	if (Utilities::Vulkan::enableValidationLayers && !checkValidationLayerSupport())
 		throw std::runtime_error("validation layers requested, but not available!");
 
-#elif defined(__APPLE__)    //Validation layers on Mac not working atm
-	Utilities::Vulkan::enableValidationLayers = false;
-	LOG("Mac has no support for Validation layers atm.");
+#elif defined(__APPLE__)    //Validation layers on Mac sort of kinda working, but also not?
+	Utilities::Vulkan::enableValidationLayers = true;
+	//LOG("Mac has no support for Validation layers atm.");
+	//LOG("Or DOES it??");
 #endif
 
 	// Application information

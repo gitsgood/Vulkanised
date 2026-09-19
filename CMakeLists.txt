@@ -25,6 +25,15 @@ if(${CMAKE_BINARY_DIR} MATCHES ".*out/.*")
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/build")
         file(REMOVE_RECURSE "${CMAKE_CURRENT_SOURCE_DIR}/build")
     endif()
+elseif($ENV{VSCODE_CMAKE_TOOLS}) # Extension should be detectable like that
+    add_compile_definitions(BUILD_ENV_VSCODE)
+    message(STATUS "=== VS Code detected ===")
+    # I added these folders in the gitignore, so this shouldn't even be necessary, but might as well...
+    file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/CMakePresets.json")
+    file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/CMakeUserPresets.json")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/out")
+        file(REMOVE_RECURSE "${CMAKE_CURRENT_SOURCE_DIR}/out")
+    endif()
 elseif(${CMAKE_BINARY_DIR} MATCHES ".*build/.*")
     add_compile_definitions(BUILD_ENV_QTCREATOR)
     message(STATUS "=== Qt Creator detected ===")
@@ -75,7 +84,8 @@ if(APPLE)
     add_custom_target(CompileShaders
         COMMENT "Compiling Vulkan shaders for macOS"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
-        COMMAND bash CompileShadersMac.sh   # Will need to double check what CompileShadersMac.sh does and adapt it
+        COMMAND "${Vulkan_GLSLC_EXECUTABLE}" "shader.vert" -o "vert.spv"
+        COMMAND "${Vulkan_GLSLC_EXECUTABLE}" "shader.frag" -o "frag.spv"
     )
 elseif(MSVC)
     add_custom_target(CompileShaders

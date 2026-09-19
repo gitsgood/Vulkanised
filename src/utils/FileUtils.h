@@ -15,6 +15,8 @@ namespace Vulkanised
 			inline constexpr const char* c_Path{ "../../../" };
 			#elif defined(BUILD_ENV_QTCREATOR)
 			inline constexpr const char* c_Path{ "../../" };
+			#elif defined(BUILD_ENV_VSCODE)
+			inline constexpr const char* c_Path{ "../" }; // When in VsCode, even on Mac, it only has one depth
 			#else
 			inline constexpr const char* c_Path{ "../../" }; // fallback e.g. Mac
 			#endif
@@ -37,7 +39,7 @@ namespace Vulkanised
 				// Check if file stream succesfully opened
 				if (!file.is_open())
 				{
-					throw std::runtime_error("failed to open a file");
+					throw std::runtime_error("Failed to open shader file: " + std::string(fileName) + "\nAttempted path: " + std::filesystem::absolute(filePath).string());
 				}
 
 				// Get current read position and use to resize file buffer
