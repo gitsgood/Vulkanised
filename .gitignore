@@ -37,6 +37,9 @@ CMakePresets.json
 *.vcxproj
 *vcxproj.*
 
+# Visual studio code crap
+/.vscode
+
 # xemacs temporary files
 *.flc
 

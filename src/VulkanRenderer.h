@@ -29,7 +29,7 @@ public:
 
 private:
 	// GLFW Window
-	std::atomic<std::shared_ptr<GLFWwindow>> m_Window;
+	VAtomic<GLFWwindow> m_Window;
 
 	// Vulkan Components
 	// - Main

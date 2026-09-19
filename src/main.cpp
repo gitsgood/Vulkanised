@@ -13,7 +13,7 @@
 namespace Vulkanised
 {
 	// Little trick I stole from Rust. Ideally this should be immutable and thread-safe, but at least it is supposed to be somehow thread-safe now. This might come in handy down the line.
-	std::atomic<std::shared_ptr<GLFWwindow>> window;
+	VAtomic<GLFWwindow> window;
 	VulkanRenderer renderer;
 
 	static void initWindow(std::string_view wName = "Test Window", const int width = 800, const int height = 600)
