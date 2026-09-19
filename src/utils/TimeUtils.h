@@ -1,5 +1,5 @@
-#ifndef TIME_UTILS_H
-#define TIME_UTILS_H
+#ifndef TIMEUTILS_H
+#define TIMEUTILS_H
 
 #include <chrono>
 #include <type_traits>
@@ -37,7 +37,7 @@ namespace Vulkanised
 
                     auto end = std::chrono::high_resolution_clock::now();
                     std::chrono::duration<double, std::nano> elapsed = end - start;
-                    //LOGT("{}: took {} µs", name, elapsed.count());
+                    //LOGT("{}: took {} ï¿½s", name, elapsed.count());
                     std::println("{}{}{}: took {} ns{}", "\033[48;2;0;255;20;38;2;7;35;55m", " TIMING : ", name, elapsed.count(), "\033[0m");
                     //std::cout << name << ": took " << elapsed.count() << " ms\n";
                 }
@@ -48,7 +48,7 @@ namespace Vulkanised
                     auto end = std::chrono::high_resolution_clock::now();
                     std::chrono::duration<double, std::nano> elapsed = end - start;
 
-                    //LOGT("{}: took {} µs", name, elapsed.count());
+                    //LOGT("{}: took {} ï¿½s", name, elapsed.count());
                     std::println("{}{}{}: took {} ns{}", "\033[48;2;0;255;20;38;2;7;35;55m", " TIMING : ", name, elapsed.count(), "\033[0m");
                     //std::cout << name << ": took " << elapsed.count() << " ms\n";
 
@@ -59,4 +59,4 @@ namespace Vulkanised
 	}
 }
 
-#endif // !TIME_UTILS_H
+#endif // !TIMEUTILS_H

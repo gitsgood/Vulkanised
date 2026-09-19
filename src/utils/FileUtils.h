@@ -1,5 +1,5 @@
-#ifndef FILE_UTILS_H
-#define FILE_UTILS_H
+#ifndef FILEUTILS_H
+#define FILEUTILS_H
 
 namespace Vulkanised
 {
@@ -23,4 +23,4 @@ namespace Vulkanised
 	}
 }
 
-#endif // !FILE_UTILS_H
+#endif // !FILEUTILS_H

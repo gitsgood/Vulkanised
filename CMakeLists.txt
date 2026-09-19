@@ -41,7 +41,7 @@ endif()
 set(SOURCES
     src/main.cpp
     src/Utilities.h
-    src/utils/VulkanUtils.h src/utils/TimeUtils.h   src/utils/FileUtils.h
+    src/utils/VulkanUtils.h src/utils/TimeUtils.h   src/utils/FileUtils.h   src/utils/CrossPlatUtils.h
     src/Logger.h            src/Logger.cpp
     src/VulkanRenderer.h    src/VulkanRenderer.cpp
 )

@@ -1,5 +1,5 @@
-#ifndef VULKAN_UTILS_H
-#define VULKAN_UTILS_H
+#ifndef VULKANUTILS_H
+#define VULKANUTILS_H
 
 #include <vulkan/vulkan.h>
 #include <vector>
@@ -70,4 +70,4 @@ namespace Vulkanised
     }
 }
 
-#endif // !VULKAN_UTILS_H
+#endif // !VULKANUTILS_H
