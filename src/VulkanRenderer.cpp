@@ -31,6 +31,7 @@ int Vulkanised::VulkanRenderer::init(GLFWwindow* newWindow)
 		createCommandPool();
 		createCommandBuffers();
 		recordCommands();
+		createSynchronisation();
 	}
 	catch (const std::runtime_error &e)
 	{
@@ -41,8 +42,67 @@ int Vulkanised::VulkanRenderer::init(GLFWwindow* newWindow)
 	return EXIT_SUCCESS;
 }
 
+void Vulkanised::VulkanRenderer::draw()
+{
+	// -- GET NEXT IMAGE --
+	// Get index of next image to be drawn to, and signal semaphore when ready to be drawn to
+	uint32_t imageIndex{ 0 };
+	if (vkAcquireNextImageKHR(m_MainDevice.logicalDevice, m_Swapchain, std::numeric_limits<uint64_t>::max(), m_ImageAvailable, VK_NULL_HANDLE, &imageIndex) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to acquire next image");
+	}
+
+	// -- SUBMIT COMMAND BUFFER TO RENDER --
+	// Queue submission information
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1;							// Number of semaphores to wait on
+	submitInfo.pWaitSemaphores = &m_ImageAvailable;				// List of semaphores to wait on
+	VkPipelineStageFlags waitStages[] = {
+		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+	};
+	submitInfo.pWaitDstStageMask = waitStages;					// Stages to check semaphores at
+	submitInfo.commandBufferCount = 1;							// Number of command buffers to submit
+	submitInfo.pCommandBuffers = &m_CommandBuffers[imageIndex];	// Command buffer to submit
+	submitInfo.signalSemaphoreCount = 1;						// Number of semaphores to signal
+	submitInfo.pSignalSemaphores = &m_RenderFinished;			// Semaphores to signal when command buffer finishes
+
+	// Submit command buffer to queue
+	if (vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to submit command buffer to queue");
+	}
+
+	// -- PRESENT RENDERED IMAGE TO SCREEN --
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1;					// Number of semaphores to wait on
+	presentInfo.pWaitSemaphores = &m_RenderFinished;	// Semaphores to wait on
+	presentInfo.swapchainCount = 1;						// Number of swapchains to present to
+	presentInfo.pSwapchains = &m_Swapchain;				// Swapchains to present images to
+	presentInfo.pImageIndices = &imageIndex;			// Index of images in swapchains to present
+
+	// Present image
+	if (vkQueuePresentKHR(m_PresentationQueue, &presentInfo) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to present image to presentation queue");
+	}
+}
+
 void Vulkanised::VulkanRenderer::cleanup()
 {
+	// Destroy semaphores
+	if (m_RenderFinished != VK_NULL_HANDLE)
+	{
+		vkDestroySemaphore(m_MainDevice.logicalDevice, m_RenderFinished, nullptr);
+		m_RenderFinished = VK_NULL_HANDLE;
+	}
+	if (m_ImageAvailable != VK_NULL_HANDLE)
+	{
+		vkDestroySemaphore(m_MainDevice.logicalDevice, m_ImageAvailable, nullptr);
+		m_ImageAvailable = VK_NULL_HANDLE;
+	}
+
 	if (m_GraphicsCommandPool != VK_NULL_HANDLE)
 	{
 		vkDestroyCommandPool(m_MainDevice.logicalDevice, m_GraphicsCommandPool, nullptr);
@@ -668,6 +728,19 @@ void Vulkanised::VulkanRenderer::createCommandBuffers()
 	if (vkAllocateCommandBuffers(m_MainDevice.logicalDevice, &commandBufferAllocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate command buffers");
+	}
+}
+
+void Vulkanised::VulkanRenderer::createSynchronisation()
+{
+	// Semaphore creation information
+	VkSemaphoreCreateInfo semaphoreCreateInfo{};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	if (vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_ImageAvailable) != VK_SUCCESS ||
+		vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_RenderFinished))
+	{
+		throw std::runtime_error("failed to create semaphore(s)");
 	}
 }
 
