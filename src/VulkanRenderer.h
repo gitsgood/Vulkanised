@@ -44,11 +44,16 @@ private:
 	VkSurfaceKHR m_Surface;
 	VkSwapchainKHR m_Swapchain;
 	std::vector<Utilities::Vulkan::SwapchainImage> m_SwapchainImages;
+	std::vector<VkFramebuffer> m_SwapchainFramebuffers;
+	std::vector<VkCommandBuffer> m_CommandBuffers;
 
 	// - Pipeline
 	VkPipeline m_GraphicsPipeline;
 	VkPipelineLayout m_PipelineLayout;
 	VkRenderPass m_RenderPass;
+
+	// - Pools
+	VkCommandPool m_GraphicsCommandPool;
 
 	// - Utility
 	VkFormat m_SwapchainImageFormat;
@@ -63,6 +68,12 @@ private:
 	void createSwapchain();
 	void createRenderPass();
 	void createGraphicsPipeline();
+	void createFramebuffers();
+	void createCommandPool();
+	void createCommandBuffers();
+
+	// - Record functions
+	void recordCommands();
 
 	// - Get functions
 	void getPhysicalDevice();
