@@ -32,6 +32,8 @@ private:
 	// GLFW Window
 	VAtomic<GLFWwindow> m_Window;
 
+	int m_CurrentFrame{ 0 };
+
 	// Vulkan Components
 	// - Main
 	VkInstance m_Instance;
@@ -61,8 +63,9 @@ private:
 	VkExtent2D m_SwapchainExtent;
 
 	// - Synchronisation
-	VkSemaphore m_ImageAvailable;
-	VkSemaphore m_RenderFinished;
+	std::vector<VkSemaphore> m_ImageAvailable;
+	std::vector<VkSemaphore> m_RenderFinished;
+	std::vector<VkFence> m_DrawFences;
 
 	// Vulkan Functions
 	// - Create functions

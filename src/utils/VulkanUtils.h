@@ -10,6 +10,8 @@ namespace Vulkanised
     {
         namespace Vulkan
         {
+            inline constexpr int c_MaxFrameDraws{ 2 };
+
             // using inline so header-only definition doesn't produce duplicate symbols when included from multiple translation units (TUs).
             inline const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 

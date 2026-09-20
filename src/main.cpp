@@ -66,7 +66,8 @@ int main()
 	while (!glfwWindowShouldClose(window.load().get()))
 	{
 		glfwPollEvents();
-		Utilities::Time::timeIt("Drawing", [&](){renderer.draw();});
+		//Utilities::Time::timeIt("Drawing", [&](){renderer.draw();});
+		renderer.draw();
 	}
 
 	renderer.cleanup();
