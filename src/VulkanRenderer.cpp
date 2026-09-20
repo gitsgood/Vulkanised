@@ -1028,8 +1028,7 @@ void Vulkanised::VulkanRenderer::populateDebugMessengerCreateInfo(VkDebugUtilsMe
 
 VKAPI_ATTR VkBool32 VKAPI_CALL Vulkanised::VulkanRenderer::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	std::cerr << "\nValidation layer: " << pCallbackData->pMessage << std::endl;
-	//LOG("Validation layer: {}", pCallbackData->pMessage);
+	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
 	return VK_FALSE;
 }
