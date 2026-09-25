@@ -67,6 +67,15 @@ private:
 	std::vector<VkSemaphore> m_RenderFinished;
 	std::vector<VkFence> m_DrawFences;
 
+	// Validation layer trackers
+	std::uint16_t m_PerformanceMsgCount{ 0 };	// Validation layer detects that we can probably do better for performance
+	std::uint16_t m_ValidationMsgCount{ 0 };	// Means we broke a Vulkan rule, we ought to look into it
+	std::uint16_t m_ErrorMsgCount{ 0 };			// We probably fucked up, ideally this stays at 0...
+	std::uint16_t m_WarningMsgCount{ 0 };		// Amount of things we should look into;
+
+	// - Validation tracker printers
+	void logTrackers() const noexcept;
+
 	// Vulkan Functions
 	// - Create functions
 	void createInstance();

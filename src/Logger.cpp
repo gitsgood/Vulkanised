@@ -110,6 +110,7 @@ void Logger::logInternal(const std::string& input, LogType inColor, std::source_
     // Output log to a file
     if (m_LoggerSettings.logToFile)
     {
-        m_File << timestamp << functionName << message << "\n";
+        //m_File << timestamp << functionName << message << "\n";
+        std::println(m_File, "{}{}{}", timestamp, functionName, message);
     }
 }

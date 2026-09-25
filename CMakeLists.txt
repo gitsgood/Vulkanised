@@ -96,4 +96,28 @@ elseif(MSVC)
     )
 endif()
 
+# More is more.
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+    COMPILE_WARNING_AS_ERROR ON
+)
+
+# Absolutely force compiler verbosity, set warning level to 4 (maximum).
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
+endif()
+
+# For the absolute off chance someone opens this project on XCode(Mac)...
+# this would be useful for an eventual wgpu addition, for now it sits...
+#if (XCODE)
+#    set_target_properties(App PROPERTIES
+#        XCODE_GENERATE_SCHEME ON
+#        XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE "Metal"
+#    )
+#endif()
+
 add_dependencies(${PROJECT_NAME} CompileShaders)

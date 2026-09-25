@@ -188,6 +188,9 @@ void Vulkanised::VulkanRenderer::cleanup()
 		m_Instance = VK_NULL_HANDLE;
 	}
 
+	// Log current validation "score"
+	logTrackers();
+
 	// Destroy GLFW window and terminate GLFW
 	//glfwDestroyWindow(m_Window.load().get());	// Normally this should be done automatically by the shared pointer...
 
@@ -196,6 +199,11 @@ void Vulkanised::VulkanRenderer::cleanup()
 
 Vulkanised::VulkanRenderer::~VulkanRenderer()
 {
+}
+
+void Vulkanised::VulkanRenderer::logTrackers() const noexcept
+{
+	LOGH("\nValidation score (the closer to 0, the better):\n\t-Performance: {}\n\t-Validation: {}\n\t-Errors: {}\n\t-Warnings: {}", m_PerformanceMsgCount, m_ValidationMsgCount, m_ErrorMsgCount, m_WarningMsgCount);
 }
 
 void Vulkanised::VulkanRenderer::createInstance()
@@ -1024,12 +1032,60 @@ void Vulkanised::VulkanRenderer::populateDebugMessengerCreateInfo(VkDebugUtilsMe
 	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	createInfo.pfnUserCallback = debugCallback;
+	createInfo.pUserData = this;	// pUserData could be used for having a pointer to the renderer, we could perhaps track some things in members...
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL Vulkanised::VulkanRenderer::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	std::cerr << "\nValidation layer: " << pCallbackData->pMessage << std::endl;
-	//LOG("Validation layer: {}", pCallbackData->pMessage);
+	VulkanRenderer* renderer = static_cast<VulkanRenderer*>(pUserData);
+	const char* severity{ " [UNDETERMINED] " };
+	const char* type{ " [UNDETERMINED] " };
+
+	switch (messageSeverity)
+	{
+	case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+		if (renderer) { renderer->m_ErrorMsgCount++; }
+		//Error message
+		severity = " [ERROR] ";
+		break;
+	case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+		if (renderer) { renderer->m_WarningMsgCount++; }
+		//Warning message
+		severity = " [WARNING] ";
+		break;
+	case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+		//it verbose, ok
+		severity = " [VERBOSE] ";
+		break;
+	case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+		//just info
+		severity = " [INFO] ";
+		break;
+	case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
+		//whatever the fuck
+		severity = " [WHATEVER THE FUCK] ";
+		break;
+	}
+
+	if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+	{
+		if (renderer) { renderer->m_PerformanceMsgCount++; }
+		//mention its performance
+		type = " [PERFORMANCE] ";
+	}
+	else if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+	{
+		if (renderer) { renderer->m_ValidationMsgCount++; }
+		//mention what the validation is for
+		type = " [VALIDATION] ";
+	}
+	else if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
+	{
+		type = " [GENERAL] ";
+	}
+
+	//LOG("\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: {}", severity, type, pCallbackData->pMessage);
+	std::println(stderr, "\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: {}", severity, type, pCallbackData->pMessage);
 
 	return VK_FALSE;
 }
