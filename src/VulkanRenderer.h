@@ -89,7 +89,6 @@ private:
 	void createCommandPool();
 	void createCommandBuffers();
 	void createSynchronisation();
-	void createSwapchainSemaphores();	// Keep an eye on this one for me, Doakes
 
 	// - Record functions
 	void recordCommands();

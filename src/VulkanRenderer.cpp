@@ -25,7 +25,6 @@ int Vulkanised::VulkanRenderer::init(GLFWwindow* newWindow)
 		getPhysicalDevice();
 		createLogicalDevice();
 		createSwapchain();
-		createSwapchainSemaphores();	// Let's see 
 		createRenderPass();
 		createGraphicsPipeline();
 		createFramebuffers();
@@ -774,6 +773,12 @@ void Vulkanised::VulkanRenderer::createSynchronisation()
 	//m_RenderFinished.resize(Utilities::Vulkan::c_MaxFrameDraws);
 	m_DrawFences.resize(Utilities::Vulkan::c_MaxFrameDraws);
 
+	// Get the actual number of images in the swapchain
+	uint32_t imageCount;
+	vkGetSwapchainImagesKHR(m_MainDevice.logicalDevice, m_Swapchain, &imageCount, nullptr);
+
+	m_RenderFinished.resize(imageCount);
+
 	// Semaphore creation information
 	VkSemaphoreCreateInfo semaphoreCreateInfo{};
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -789,27 +794,16 @@ void Vulkanised::VulkanRenderer::createSynchronisation()
 			//vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_RenderFinished[i]) != VK_SUCCESS ||
 			vkCreateFence(m_MainDevice.logicalDevice, &fenceCreateInfo, nullptr, &m_DrawFences[i]) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create semaphore(s) and/or fence");
+			throw std::runtime_error("failed to create image available semaphore(s) and/or draw fence(s)");
 		}
 	}
-}
 
-void Vulkanised::VulkanRenderer::createSwapchainSemaphores()
-{
-	// Get the actual number of images in the swapchain
-	uint32_t imageCount;
-	vkGetSwapchainImagesKHR(m_MainDevice.logicalDevice, m_Swapchain, &imageCount, nullptr);
-
-	m_RenderFinished.resize(imageCount);
-
-	VkSemaphoreCreateInfo semaphoreCreateInfo{};
-	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
+	// The render finished semaphores need to amount up to the image count in the swapchain, so it has its own loop
 	for (size_t i = 0; i < imageCount; i++)
 	{
 		if (vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_RenderFinished[i]) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create render finished semaphores");
+			throw std::runtime_error("failed to create render finished semaphore(s)");
 		}
 	}
 }
