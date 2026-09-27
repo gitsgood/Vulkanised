@@ -42,13 +42,13 @@ namespace Vulkanised
 class Logger
 {
 public:
-    static std::shared_ptr<Logger> getLoggerInstance()
+    static std::shared_ptr<Logger> getLoggerInstance() noexcept
     {
         static std::shared_ptr<Logger> loggerSingleton{ new Logger() };
         return loggerSingleton;
     }
 
-    ~Logger()
+    ~Logger() noexcept
     {
         //writeSettingsFile();  // For now we will only write the settings when we try to read them (if they dont exist, and once). If we make an editor we can refactor this later.
         logText(LogType::HIGHLIGHT, std::source_location::current(), "Goodnight logger...");
@@ -64,7 +64,7 @@ public:
         ERR
     };
 
-    std::string getTimestamp();
+    std::string getTimestamp() noexcept;
 
     // I want to be able to log things with modern formatting abilities. This here function takes care of it.
     template <typename... Args>
@@ -97,16 +97,16 @@ private:
     } m_LoggerSettings;
 
     // Methods for our eyes only...
-    void readSettingsFile();
-    void writeSettingsFile();
+    void readSettingsFile() noexcept;
+    void writeSettingsFile() noexcept;
 
     // For debugging purposes. Could eventually remove this completely down the line.
-    void printBooleans();
+    void printBooleans() noexcept;
 
-    void logInternal(const std::string& input, LogType inColor, std::source_location callSite);
+    void logInternal(const std::string& input, LogType inColor, std::source_location callSite) noexcept;
 
     // Private constructors to strictly control instantiation of the class.
-    Logger()
+    Logger() noexcept
     {
         readSettingsFile();
         if (!m_LoggerSettings.deleteLogFileAtStart)

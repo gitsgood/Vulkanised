@@ -24,7 +24,7 @@ public:
 
 	int init(GLFWwindow* newWindow);
 	void draw();
-	void cleanup();
+	void cleanup() noexcept;
 
 	~VulkanRenderer();
 

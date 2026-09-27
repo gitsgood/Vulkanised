@@ -17,14 +17,14 @@ namespace Vulkanised
 		namespace Time
 		{
 			// Static local time. We can use this to log order of operations, as well as their speed. Initialised at the first line of main and stays that way for the rest of runtime.
-			inline std::chrono::steady_clock::time_point getStartTime() 
+			inline std::chrono::steady_clock::time_point getStartTime() noexcept
             {
 				static std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 				return startTime;
 			}
 
             template <typename F, typename... Args>
-            auto timeIt(std::string_view name, F&& f, Args&&... args) 
+            auto timeIt(std::string_view name, F&& f, Args&&... args) noexcept
             {
                 // Determine the return type of f when called with these specific args
                 using ReturnType = std::invoke_result_t<F, Args...>;

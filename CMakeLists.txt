@@ -64,6 +64,21 @@ file(GLOB SHADER_FILES
 # Define your executable using the SOURCES variable
 add_executable(${PROJECT_NAME} ${SOURCES} ${SHADER_FILES})
 
+# More is more.
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+    COMPILE_WARNING_AS_ERROR ON
+)
+
+# Absolutely force compiler verbosity, set warning level to 4 (maximum).
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
+endif()
+
 # Tell CMake this specific target requires C++23
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
@@ -94,21 +109,6 @@ elseif(MSVC)
         COMMAND "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe" -V "shader.vert" -o "vert.spv"
         COMMAND "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe" -V "shader.frag" -o "frag.spv"
     )
-endif()
-
-# More is more.
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 23
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-    COMPILE_WARNING_AS_ERROR ON
-)
-
-# Absolutely force compiler verbosity, set warning level to 4 (maximum).
-if (MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
-else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
 endif()
 
 # For the absolute off chance someone opens this project on XCode(Mac)...

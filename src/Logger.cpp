@@ -2,7 +2,7 @@
 
 using namespace Vulkanised;
 
-std::string Logger::getTimestamp()
+std::string Logger::getTimestamp() noexcept
 {
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 
@@ -15,7 +15,7 @@ std::string Logger::getTimestamp()
     return std::format("[{:%H:%M:%S}] [{:.6f}s] ", systemNow, elapsedSeconds);
 }
 
-void Logger::readSettingsFile()
+void Logger::readSettingsFile() noexcept
 {
     std::filesystem::path settingsPath{ std::filesystem::path(Utilities::File::c_Path) / Utilities::File::c_LogSettingsFileName };
     std::string jsonBuffer{ "" };
@@ -29,7 +29,7 @@ void Logger::readSettingsFile()
     //logText(LogType::HIGHLIGHT, std::source_location::current(), "{}", jsonBuffer);
 }
 
-void Logger::writeSettingsFile()
+void Logger::writeSettingsFile() noexcept
 {
     std::filesystem::path settingsPath{ std::filesystem::path(Utilities::File::c_Path) / Utilities::File::c_LogSettingsFileName };
     std::string buffer = glz::write_json(m_LoggerSettings).value_or("error");
@@ -40,7 +40,7 @@ void Logger::writeSettingsFile()
     jsonFile.close();
 }
 
-void Logger::printBooleans()
+void Logger::printBooleans() noexcept
 {
     std::stringstream finalMessage;
     finalMessage << "\n";
@@ -51,7 +51,7 @@ void Logger::printBooleans()
     logText(LogType::HIGHLIGHT, std::source_location::current(), finalMessage.str());
 }
 
-void Logger::logInternal(const std::string& input, LogType inColor, std::source_location callSite)
+void Logger::logInternal(const std::string& input, LogType inColor, std::source_location callSite) noexcept
 {
     // Early exit: If logging is totally disabled, don't even lock the mutex
     if (!m_LoggerSettings.logToConsole && !m_LoggerSettings.logToFile) return;

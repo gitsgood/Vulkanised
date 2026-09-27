@@ -97,7 +97,7 @@ void Vulkanised::VulkanRenderer::draw()
 	m_CurrentFrame = (m_CurrentFrame + 1) % Utilities::Vulkan::c_MaxFrameDraws;
 }
 
-void Vulkanised::VulkanRenderer::cleanup()
+void Vulkanised::VulkanRenderer::cleanup() noexcept
 {
 	// Wait until no actions being run on device before destroying
 	vkDeviceWaitIdle(m_MainDevice.logicalDevice);
@@ -1084,8 +1084,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Vulkanised::VulkanRenderer::debugCallback(VkDebug
 		type = " [GENERAL] ";
 	}
 
-	//LOG("\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: {}", severity, type, pCallbackData->pMessage);
-	std::println(stderr, "\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: {}", severity, type, pCallbackData->pMessage);
+	//LOG("\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
+	std::println(stderr, "\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
 
 	return VK_FALSE;
 }
