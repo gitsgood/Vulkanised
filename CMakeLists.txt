@@ -49,10 +49,11 @@ endif()
 # Set source files...
 set(SOURCES
     src/main.cpp
-    src/Utilities.h
-    src/utils/VulkanUtils.h src/utils/TimeUtils.h   src/utils/FileUtils.h   src/utils/CrossPlatUtils.h
-    src/Logger.h            src/Logger.cpp
-    src/VulkanRenderer.h    src/VulkanRenderer.cpp
+    include/Utilities.h
+    include/utils/VulkanUtils.h include/utils/TimeUtils.h   include/utils/FileUtils.h   include/utils/CrossPlatUtils.h
+    include/Logger.h            src/Logger.cpp
+    include/VulkanRenderer.h    src/VulkanRenderer.cpp
+    include/Vertex.h
 )
 
 # all shader and script files shown in IDE
@@ -63,6 +64,9 @@ file(GLOB SHADER_FILES
 
 # Define your executable using the SOURCES variable
 add_executable(${PROJECT_NAME} ${SOURCES} ${SHADER_FILES})
+
+# Tell CMake to actually bother including the headers in my own project (HAS to be after "add_executable")
+target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 # More is more.
 set_target_properties(${PROJECT_NAME} PROPERTIES
