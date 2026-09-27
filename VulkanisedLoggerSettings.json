@@ -1,1 +1,1 @@
-{"logToFile":true,"deleteLogFileAtStart":false,"logToConsole":true}
+{"logToFile":true,"deleteLogFileAtStart":true,"logToConsole":true}

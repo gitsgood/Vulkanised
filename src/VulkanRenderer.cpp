@@ -25,6 +25,7 @@ int Vulkanised::VulkanRenderer::init(GLFWwindow* newWindow)
 		getPhysicalDevice();
 		createLogicalDevice();
 		createSwapchain();
+		createSwapchainSemaphores();	// Let's see 
 		createRenderPass();
 		createGraphicsPipeline();
 		createFramebuffers();
@@ -70,7 +71,7 @@ void Vulkanised::VulkanRenderer::draw()
 	submitInfo.commandBufferCount = 1;									// Number of command buffers to submit
 	submitInfo.pCommandBuffers = &m_CommandBuffers[imageIndex];			// Command buffer to submit
 	submitInfo.signalSemaphoreCount = 1;								// Number of semaphores to signal
-	submitInfo.pSignalSemaphores = &m_RenderFinished[m_CurrentFrame];	// Semaphores to signal when command buffer finishes
+	submitInfo.pSignalSemaphores = &m_RenderFinished[imageIndex];	// Semaphores to signal when command buffer finishes
 
 	// Submit command buffer to queue
 	if (vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_DrawFences[m_CurrentFrame]) != VK_SUCCESS)
@@ -82,7 +83,7 @@ void Vulkanised::VulkanRenderer::draw()
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.waitSemaphoreCount = 1;									// Number of semaphores to wait on
-	presentInfo.pWaitSemaphores = &m_RenderFinished[m_CurrentFrame];	// Semaphores to wait on
+	presentInfo.pWaitSemaphores = &m_RenderFinished[imageIndex];	// Semaphores to wait on
 	presentInfo.swapchainCount = 1;										// Number of swapchains to present to
 	presentInfo.pSwapchains = &m_Swapchain;								// Swapchains to present images to
 	presentInfo.pImageIndices = &imageIndex;							// Index of images in swapchains to present
@@ -105,11 +106,6 @@ void Vulkanised::VulkanRenderer::cleanup() noexcept
 	// Destroy semaphores and fences
 	for (size_t i = 0; i < Utilities::Vulkan::c_MaxFrameDraws; i++)
 	{
-		if (m_RenderFinished[i] != VK_NULL_HANDLE)
-		{
-			vkDestroySemaphore(m_MainDevice.logicalDevice, m_RenderFinished[i], nullptr);
-			m_RenderFinished[i] = VK_NULL_HANDLE;
-		}
 		if (m_ImageAvailable[i] != VK_NULL_HANDLE)
 		{
 			vkDestroySemaphore(m_MainDevice.logicalDevice, m_ImageAvailable[i], nullptr);
@@ -121,13 +117,21 @@ void Vulkanised::VulkanRenderer::cleanup() noexcept
 			m_DrawFences[i] = VK_NULL_HANDLE;
 		}
 	}
+	for (auto renderFinishedSemaphore : m_RenderFinished)
+	{
+		if (renderFinishedSemaphore != VK_NULL_HANDLE)
+		{
+			vkDestroySemaphore(m_MainDevice.logicalDevice, renderFinishedSemaphore, nullptr);
+			renderFinishedSemaphore = VK_NULL_HANDLE;
+		}
+	}
 
 	if (m_GraphicsCommandPool != VK_NULL_HANDLE)
 	{
 		vkDestroyCommandPool(m_MainDevice.logicalDevice, m_GraphicsCommandPool, nullptr);
 		m_GraphicsCommandPool = VK_NULL_HANDLE;
 	}
-	for (auto& framebuffer : m_SwapchainFramebuffers)
+	for (auto framebuffer : m_SwapchainFramebuffers)
 	{
 		if (framebuffer != VK_NULL_HANDLE)
 		{
@@ -203,6 +207,8 @@ Vulkanised::VulkanRenderer::~VulkanRenderer()
 
 void Vulkanised::VulkanRenderer::logTrackers() const noexcept
 {
+	if (!Utilities::Vulkan::enableValidationLayers) { return; }
+
 	LOGH("\nValidation score (the closer to 0, the better):\n\t-Performance: {}\n\t-Validation: {}\n\t-Errors: {}\n\t-Warnings: {}", m_PerformanceMsgCount, m_ValidationMsgCount, m_ErrorMsgCount, m_WarningMsgCount);
 }
 
@@ -213,7 +219,11 @@ void Vulkanised::VulkanRenderer::createInstance()
 		throw std::runtime_error("validation layers requested, but not available!");
 
 #elif defined(__APPLE__)    //Validation layers on Mac sort of kinda working, but also not?
-	Utilities::Vulkan::enableValidationLayers = true;
+	if (Utilities::Vulkan::enableValidationLayers && !checkValidationLayerSupport())
+	{
+		Utilities::Vulkan::enableValidationLayers = false;
+		LOGE("This Mac has no support for Validation layers.");
+	}
 	//LOG("Mac has no support for Validation layers atm.");
 	//LOG("Or DOES it??");
 #endif
@@ -761,7 +771,7 @@ void Vulkanised::VulkanRenderer::createCommandBuffers()
 void Vulkanised::VulkanRenderer::createSynchronisation()
 {
 	m_ImageAvailable.resize(Utilities::Vulkan::c_MaxFrameDraws);
-	m_RenderFinished.resize(Utilities::Vulkan::c_MaxFrameDraws);
+	//m_RenderFinished.resize(Utilities::Vulkan::c_MaxFrameDraws);
 	m_DrawFences.resize(Utilities::Vulkan::c_MaxFrameDraws);
 
 	// Semaphore creation information
@@ -776,10 +786,30 @@ void Vulkanised::VulkanRenderer::createSynchronisation()
 	for (size_t i = 0; i < Utilities::Vulkan::c_MaxFrameDraws; i++)
 	{
 		if (vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_ImageAvailable[i]) != VK_SUCCESS ||
-			vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_RenderFinished[i]) != VK_SUCCESS ||
+			//vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_RenderFinished[i]) != VK_SUCCESS ||
 			vkCreateFence(m_MainDevice.logicalDevice, &fenceCreateInfo, nullptr, &m_DrawFences[i]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create semaphore(s) and/or fence");
+		}
+	}
+}
+
+void Vulkanised::VulkanRenderer::createSwapchainSemaphores()
+{
+	// Get the actual number of images in the swapchain
+	uint32_t imageCount;
+	vkGetSwapchainImagesKHR(m_MainDevice.logicalDevice, m_Swapchain, &imageCount, nullptr);
+
+	m_RenderFinished.resize(imageCount);
+
+	VkSemaphoreCreateInfo semaphoreCreateInfo{};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	for (size_t i = 0; i < imageCount; i++)
+	{
+		if (vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_RenderFinished[i]) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create render finished semaphores");
 		}
 	}
 }
