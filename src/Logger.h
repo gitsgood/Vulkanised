@@ -15,12 +15,12 @@
 #include "Utilities.h"
 
 // The macros we will use henceforth to log ANYTHING. We really did learn from the best
-#define LOGGER(type, fmt, ...)  Logger::getLoggerInstance()->logText(type, std::source_location::current(), fmt, ##__VA_ARGS__)
-#define LOG(fmt, ...)           Logger::getLoggerInstance()->logText(Logger::LogType::LOG, std::source_location::current(), fmt, ##__VA_ARGS__)
-#define LOGH(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::HIGHLIGHT, std::source_location::current(), fmt, ##__VA_ARGS__)
-#define LOGW(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::WARNING, std::source_location::current(), fmt, ##__VA_ARGS__)
-#define LOGE(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::ERR, std::source_location::current(), fmt, ##__VA_ARGS__)
-#define LOGT(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::TIMING, std::source_location::current(), fmt, ##__VA_ARGS__)
+#define LOGGER(type, fmt, ...)  Logger::getLoggerInstance()->logText(type, std::source_location::current(), fmt, __VA_ARGS__)
+#define LOG(fmt, ...)           Logger::getLoggerInstance()->logText(Logger::LogType::LOG, std::source_location::current(), fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOGH(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::HIGHLIGHT, std::source_location::current(), fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOGW(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::WARNING, std::source_location::current(), fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOGE(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::ERR, std::source_location::current(), fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOGT(fmt, ...)          Logger::getLoggerInstance()->logText(Logger::LogType::TIMING, std::source_location::current(), fmt __VA_OPT__(,) __VA_ARGS__)
 
 namespace Vulkanised
 {
