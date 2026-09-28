@@ -54,6 +54,7 @@ set(SOURCES
     include/Logger.h            src/Logger.cpp
     include/VulkanRenderer.h    src/VulkanRenderer.cpp
     include/Vertex.h
+    include/Mesh.h              src/Mesh.cpp
 )
 
 # all shader and script files shown in IDE

@@ -14,6 +14,8 @@
 
 #include "Utilities.h"
 #include "Logger.h"
+#include "Vertex.h"
+#include "Mesh.h"
 
 namespace Vulkanised
 {
@@ -33,6 +35,9 @@ private:
 	VAtomic<GLFWwindow> m_Window;
 
 	int m_CurrentFrame{ 0 };
+
+	// Scene objects
+	std::unique_ptr<Mesh> m_FirstMesh;
 
 	// Vulkan Components
 	// - Main

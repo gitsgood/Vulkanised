@@ -24,6 +24,19 @@ int Vulkanised::VulkanRenderer::init(GLFWwindow* newWindow)
 		createSurface();
 		getPhysicalDevice();
 		createLogicalDevice();
+
+		// Create a mesh
+		std::vector<Vertex> meshVertices{
+			{{0.4, -0.4, 0.0}, {1.0f, 0.0f, 0.0f}},
+			{{0.4, 0.4, 0.0}, {0.0f, 1.0f, 0.0f}},
+			{{-0.4, 0.4, 0.0}, {0.0f, 0.0f, 1.0f}},
+
+			{{-0.4, 0.4, 0.0}, {0.0f, 0.0f, 1.0f}},
+			{{-0.4, -0.4, 0.0}, {1.0f, 1.0f, 0.0f}},
+			{{0.4, -0.4, 0.0}, {1.0f, 0.0f, 0.0f}}
+		};
+		m_FirstMesh = std::make_unique<Mesh>(m_MainDevice.physicalDevice, m_MainDevice.logicalDevice, &meshVertices);
+
 		createSwapchain();
 		createRenderPass();
 		createGraphicsPipeline();
@@ -101,6 +114,11 @@ void Vulkanised::VulkanRenderer::cleanup() noexcept
 {
 	// Wait until no actions being run on device before destroying
 	vkDeviceWaitIdle(m_MainDevice.logicalDevice);
+
+	// Destroy the meshes
+	if (m_FirstMesh) {
+		m_FirstMesh.reset();
+	}
 
 	// Destroy semaphores and fences
 	for (size_t i = 0; i < Utilities::Vulkan::c_MaxFrameDraws; i++)
@@ -557,14 +575,19 @@ void Vulkanised::VulkanRenderer::createGraphicsPipeline()
 	// Graphics pipeline creation info requires array of shader stage creates
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertexShaderCreateInfo, fragmentShaderCreateInfo };
 
+	// How the data for a single vertex (including info such as position, colour, texture coordinates, normals, etc...) is as a whole
+	VkVertexInputBindingDescription bindingDescription{ Vertex::getBindingDescription() };
 
-	// -- VERTEX INPUT (TODO: Put in vertex descriptions when ressources created) --
+	// How the data for an attribute is defined within a vertex
+	std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{ Vertex::getAttributeDescriptions() };
+
+	// -- VERTEX INPUT --
 	VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{};
 	vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputCreateInfo.vertexBindingDescriptionCount = 0;
-	vertexInputCreateInfo.pVertexBindingDescriptions = nullptr;		// List of vertex binding descriptions (data spacing/stride information)
-	vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;	// List of attribute descriptions (data format and where to bind to/from)
+	vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
+	vertexInputCreateInfo.pVertexBindingDescriptions = &bindingDescription;											// List of vertex binding descriptions (data spacing/stride information)
+	vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();								// List of attribute descriptions (data format and where to bind to/from)
 
 	// -- INPUT ASSEMBLY --
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{};
@@ -838,17 +861,21 @@ void Vulkanised::VulkanRenderer::recordCommands()
 			throw std::runtime_error("failed to start recording a command buffer");
 		}
 
-		// Begin render pass
-		vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+			// Begin render pass
+			vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		// Bind pipeline to be used in render pass
-		vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
+				// Bind pipeline to be used in render pass
+				vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
 
-		// Execute pipeline
-		vkCmdDraw(m_CommandBuffers[i], 3, 1, 0, 0);
+				VkBuffer vertexBuffers[] = { m_FirstMesh->getVertexBuffer() };						// Buffers to bind
+				VkDeviceSize offsets[] = { 0 };													// Offsets into buffers being bound
+				vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, vertexBuffers, offsets);		// Command to bind vertex buffer before drawing with them
 
-		// End render pass
-		vkCmdEndRenderPass(m_CommandBuffers[i]);
+				// Execute pipeline
+				vkCmdDraw(m_CommandBuffers[i], static_cast<uint32_t>(m_FirstMesh->getVertexCount()), 1, 0, 0);
+
+			// End render pass
+			vkCmdEndRenderPass(m_CommandBuffers[i]);
 
 		// Stop recording to command buffer
 		if (vkEndCommandBuffer(m_CommandBuffers[i]) != VK_SUCCESS)
@@ -1108,8 +1135,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Vulkanised::VulkanRenderer::debugCallback(VkDebug
 		type = " [GENERAL] ";
 	}
 
-	//LOG("\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
-	std::println(stderr, "\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
+	LOG("\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
+	//std::println(stderr, "\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
 
 	return VK_FALSE;
 }
