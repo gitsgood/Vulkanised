@@ -25,7 +25,7 @@ namespace Vulkanised
 
 		// Set GLFW to not create an OpenGL context
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 		// Create the raw pointer
 		GLFWwindow* rawWindow = glfwCreateWindow(width, height, wName.data(), nullptr, nullptr);

@@ -17,6 +17,9 @@ add_subdirectory(external/glaze)
 # Ask CMake to find the Vulkan SDK installed on the computer
 find_package(Vulkan REQUIRED)
 
+# In my windows I have GLM installed with Vulkan, but in case it isn't (my Mac, which has it via homebrew), we got this
+find_package(glm REQUIRED)
+
 # Detect build environment based on CMAKE_BINARY_DIR
 # Used to set correct PATH and some clean up
 if(${CMAKE_BINARY_DIR} MATCHES ".*out/.*")
@@ -97,7 +100,7 @@ if(MSVC)
 endif()
 
 # Link the libraries
-target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze)
+target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze glm::glm)
 
 # Shader compilation, hopefully cross-platform
 if(APPLE)

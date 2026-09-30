@@ -5,7 +5,7 @@ Vulkanised::Mesh::Mesh()
 }
 
 Vulkanised::Mesh::Mesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, std::vector<Vertex>* vertices) 
-	: m_PhysicalDevice(newPhysicalDevice), m_LogicalDevice(newDevice), m_VertexCount(vertices->size())
+	: m_VertexCount(vertices->size()), m_PhysicalDevice(newPhysicalDevice), m_LogicalDevice(newDevice)
 {
 	LOG("A new mesh joins the ranks...");
 	createVertexBuffer(vertices);
