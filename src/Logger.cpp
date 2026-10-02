@@ -62,6 +62,9 @@ void Logger::logInternal(const std::string& input, LogType inColor, std::source_
     const char* colorCode = Color::Reset;
     const char* prefix = " ";
 
+    // Building the function name string
+    std::string functionName = std::format("[ {} ]", callSite.function_name());
+
     switch (inColor)
     {
     case LogType::LOG:
@@ -82,13 +85,14 @@ void Logger::logInternal(const std::string& input, LogType inColor, std::source_
         colorCode = Color::Error;
         prefix = " ERROR: ";
         break;
+    case LogType::VALIDATION:
+        colorCode = Color::Reset;
+        functionName.clear();       // Validation layers get called by the same function, with a lengthy and useless name. It gets its own case now...
+        break;
     default:
         colorCode = Color::Reset;
         break;
     }
-
-    // Building the function name string
-    std::string functionName = std::format("[ {} ]", callSite.function_name());
 
     // Building the message
     std::string message = std::format("{}{}", prefix, input);

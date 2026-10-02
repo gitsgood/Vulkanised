@@ -62,7 +62,8 @@ public:
         HIGHLIGHT,
         TIMING,
         WARNING,
-        ERR
+        ERR,
+        VALIDATION
     };
 
     std::string getTimestamp() noexcept;

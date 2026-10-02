@@ -1200,7 +1200,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Vulkanised::VulkanRenderer::debugCallback(VkDebug
 		type = " [GENERAL] ";
 	}
 
-	LOG("\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
+	LOGGER(Logger::LogType::VALIDATION, "\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
 	//std::println(stderr, "\nValidation layer:\n\t-Severity: {}\n\t-Message type: {}\n\t-Message: \n{}", severity, type, pCallbackData->pMessage);
 
 	return VK_FALSE;
