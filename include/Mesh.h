@@ -9,6 +9,7 @@
 
 #include "Vertex.h"
 #include "Logger.h"
+#include "Utilities.h"
 
 namespace Vulkanised
 {
@@ -17,10 +18,20 @@ class Mesh
 {
 public:
 	Mesh();
-	Mesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, std::vector<Vertex>* vertices);
+	Mesh(
+		VkPhysicalDevice newPhysicalDevice, 
+		VkDevice newDevice, 
+		VkQueue transferQueue, 
+		VkCommandPool transferCommandPool, 
+		std::vector<Vertex>* vertices,
+		std::vector<uint32_t>* indices
+	);
 
-	size_t getVertexCount() const noexcept;
-	VkBuffer getVertexBuffer() const noexcept;
+	[[nodiscard]] inline size_t getVertexCount() const noexcept { return m_VertexCount; }
+	[[nodiscard]] inline VkBuffer getVertexBuffer() const noexcept { return m_VertexBuffer; }
+
+	[[nodiscard]] inline size_t getIndexCount() const noexcept {return m_IndexCount; }
+	[[nodiscard]] inline VkBuffer getIndexBuffer() const noexcept { return m_IndexBuffer; }
 
 	~Mesh();
 
@@ -32,11 +43,18 @@ private:
 	VkBuffer m_VertexBuffer;
 	VkDeviceMemory m_VertexBufferMemory;
 
+	size_t m_IndexCount{ 0 };
+	VkBuffer m_IndexBuffer;
+	VkDeviceMemory m_IndexBufferMemory;
+
 	VkPhysicalDevice m_PhysicalDevice;
 	VkDevice m_LogicalDevice;
 	
-	void createVertexBuffer(std::vector<Vertex>* vertices);
-	uint32_t findMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags properties) const noexcept;
+	void createVertexBuffer(VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices);
+	void createIndexBuffer(VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<uint32_t>* indices);
+
+	// This one has been moved to the Vulkan Utilities namespace (as a more general one)
+	//uint32_t findMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags properties) const noexcept;
 };
 
 }

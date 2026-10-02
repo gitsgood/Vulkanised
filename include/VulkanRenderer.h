@@ -37,7 +37,7 @@ private:
 	int m_CurrentFrame{ 0 };
 
 	// Scene objects
-	std::unique_ptr<Mesh> m_FirstMesh;
+	std::vector<std::unique_ptr<Mesh>> m_MeshList;
 
 	// Vulkan Components
 	// - Main

@@ -4,21 +4,19 @@ Vulkanised::Mesh::Mesh()
 {
 }
 
-Vulkanised::Mesh::Mesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, std::vector<Vertex>* vertices) 
-	: m_VertexCount(vertices->size()), m_PhysicalDevice(newPhysicalDevice), m_LogicalDevice(newDevice)
+Vulkanised::Mesh::Mesh(
+		VkPhysicalDevice newPhysicalDevice, 
+		VkDevice newDevice, 
+		VkQueue transferQueue, 
+		VkCommandPool transferCommandPool, 
+		std::vector<Vertex>* vertices,
+		std::vector<uint32_t>* indices
+	)
+	: m_VertexCount(vertices->size()), m_IndexCount(indices->size()), m_PhysicalDevice(newPhysicalDevice), m_LogicalDevice(newDevice)
 {
 	LOG("A new mesh joins the ranks...");
-	createVertexBuffer(vertices);
-}
-
-size_t Vulkanised::Mesh::getVertexCount() const noexcept
-{
-	return m_VertexCount;
-}
-
-VkBuffer Vulkanised::Mesh::getVertexBuffer() const noexcept
-{
-	return m_VertexBuffer;
+	createVertexBuffer(transferQueue, transferCommandPool, vertices);
+	createIndexBuffer(transferQueue, transferCommandPool, indices);
 }
 
 Vulkanised::Mesh::~Mesh()
@@ -35,70 +33,112 @@ Vulkanised::Mesh::~Mesh()
 		vkFreeMemory(m_LogicalDevice, m_VertexBufferMemory, nullptr);
 		m_VertexBufferMemory = VK_NULL_HANDLE;
 	}
+
+	if (m_IndexBuffer != VK_NULL_HANDLE)
+	{
+		vkDestroyBuffer(m_LogicalDevice, m_IndexBuffer, nullptr);
+		m_IndexBuffer = VK_NULL_HANDLE;
+	}
+	if (m_IndexBufferMemory != VK_NULL_HANDLE)
+	{
+		vkFreeMemory(m_LogicalDevice, m_IndexBufferMemory, nullptr);
+		m_IndexBufferMemory = VK_NULL_HANDLE;
+	}
 }
 
-void Vulkanised::Mesh::createVertexBuffer(std::vector<Vertex>* vertices)
+void Vulkanised::Mesh::createVertexBuffer(VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices)
 {
-	// CREATE VERTEX BUFFER
-	// Information to create a buffer (doesn't include assigning memory)
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = sizeof(Vertex) * vertices->size();			// Size of buffer (size of 1 vertex * number of vertices)
-	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;			// Multiple types of buffer possible, we want Vertex buffer
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;				// Similar to swapchain images, can share vertex buffers
+	// Get size of buffer needed for vertices
+	VkDeviceSize bufferSize{sizeof(Vertex) * vertices->size()};
 
-	if (vkCreateBuffer(m_LogicalDevice, &bufferInfo, nullptr, &m_VertexBuffer) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create a vertex buffer");
-	}
+	// Temporary buffer to "stage" vertex data before transferring to GPU
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
 
-	// GET BUFFER MEMORY REQUIREMENTS
-	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(m_LogicalDevice, m_VertexBuffer, &memRequirements);
-
-	// ALLOCATE MEMORY TO BUFFER
-	VkMemoryAllocateInfo memoryAllocInfo{};
-	memoryAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	memoryAllocInfo.allocationSize = memRequirements.size;
-	memoryAllocInfo.memoryTypeIndex = findMemoryTypeIndex(memRequirements.memoryTypeBits,		// Index of memory type on Physical device that has required bit flags
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);			// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT	: CPU can interact with memory
-																								// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT	: Allows placement of data straight into buffer after mapping (otherwise would have to specify manually)
-
-	// Allocate memory to VkDeviceMemory
-	if (vkAllocateMemory(m_LogicalDevice, &memoryAllocInfo, nullptr, &m_VertexBufferMemory) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate vertex buffer memory");
-	}
-
-	// Allocate memory to given vertex buffer
-	if (vkBindBufferMemory(m_LogicalDevice, m_VertexBuffer, m_VertexBufferMemory, 0) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to bind buffer memory!");
-	}
+	// Create staging buffer and allocate memory to it
+	Utilities::Vulkan::createBuffer(
+		m_PhysicalDevice, 
+		m_LogicalDevice, 
+		bufferSize, 
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+		&stagingBuffer, 
+		&stagingBufferMemory
+	);
+	
 
 	// MAP MEMORY TO VERTEX BUFFER
 	void* data;																				// 1. Create pointer to a point in normal memory
-	vkMapMemory(m_LogicalDevice, m_VertexBufferMemory, 0, bufferInfo.size, 0, &data);		// 2. "Map" the vertex buffer memory to that point
-	memcpy(data, vertices->data(), (size_t)bufferInfo.size);								// 3. Copy memory from vertices vector to the point
-	vkUnmapMemory(m_LogicalDevice, m_VertexBufferMemory);									// 4. Unmap the vertex buffer memory
+	vkMapMemory(m_LogicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);				// 2. "Map" the vertex buffer memory to that point
+	memcpy(data, vertices->data(), (size_t)bufferSize);										// 3. Copy memory from vertices vector to the point
+	vkUnmapMemory(m_LogicalDevice, stagingBufferMemory);									// 4. Unmap the vertex buffer memory
+
+	// Create buffer with TRANSFER_DST_BIT to mark as recipient of transfer data (also, actual Vertex Buffer)
+	// Buffer memory is to be DEVICE_LOCAL_BIT, meaning memory is on the GPU and only accessible by it and not CPU (host)
+	Utilities::Vulkan::createBuffer(
+		m_PhysicalDevice, 
+		m_LogicalDevice, 
+		bufferSize, 
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+		&m_VertexBuffer, 
+		&m_VertexBufferMemory
+	);
+
+	// Copy staging buffer to vertex buffer on GPU
+	Utilities::Vulkan::copyBuffer(m_LogicalDevice, transferQueue, transferCommandPool, stagingBuffer, m_VertexBuffer, bufferSize);
+
+	// Clean up staging buffer parts
+	vkDestroyBuffer(m_LogicalDevice, stagingBuffer, nullptr);
+	vkFreeMemory(m_LogicalDevice, stagingBufferMemory, nullptr); 
 }
 
-uint32_t Vulkanised::Mesh::findMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags properties) const noexcept
+void Vulkanised::Mesh::createIndexBuffer(VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<uint32_t>* indices)
 {
-	// Get properties of physical device memory
-	VkPhysicalDeviceMemoryProperties memoryProperties;
-	vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memoryProperties);
+	// Get size of buffer needed for indices
+	VkDeviceSize bufferSize{ sizeof(uint32_t) * indices->size() };
 
-	uint32_t retVal{ 0 };
-	for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
-	{
-		if ((allowedTypes & (1 << i))															// Index of memory type must correspond bit in allowedTypes
-			&& (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)		// The desired property bit flags are part of memory type's property flag 
-		{
-			// This memory type is valid, so return its index
-			retVal = i;
-			return i;
-		}
-	}
-	return retVal;
+	// Temporary buffer to "stage" vertex data before transferring to GPU
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	Utilities::Vulkan::createBuffer(
+		m_PhysicalDevice, 
+		m_LogicalDevice, 
+		bufferSize, 
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		&stagingBuffer,
+		&stagingBufferMemory
+	);
+
+	// MAP MEMORY TO INDEX BUFFER
+	void* data;
+	vkMapMemory(m_LogicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, indices->data(), (size_t)bufferSize);
+	vkUnmapMemory(m_LogicalDevice, stagingBufferMemory);
+
+	// Create buffer for INDEX data on GPU access memory area
+	Utilities::Vulkan::createBuffer(
+		m_PhysicalDevice,
+		m_LogicalDevice,
+		bufferSize,
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		&m_IndexBuffer,
+		&m_IndexBufferMemory
+	);
+
+	// Copy from staging buffer to GPU access buffer
+	Utilities::Vulkan::copyBuffer(
+		m_LogicalDevice,
+		transferQueue,
+		transferCommandPool,
+		stagingBuffer,
+		m_IndexBuffer,
+		bufferSize
+	);
+
+	// Destroy & release staging buffer resources
+	vkDestroyBuffer(m_LogicalDevice, stagingBuffer, nullptr);
+	vkFreeMemory(m_LogicalDevice, stagingBufferMemory, nullptr);
 }

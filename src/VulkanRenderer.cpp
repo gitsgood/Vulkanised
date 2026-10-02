@@ -8,7 +8,8 @@ Vulkanised::VulkanRenderer::VulkanRenderer()
 
 int Vulkanised::VulkanRenderer::init(GLFWwindow* newWindow)
 {
-	if (newWindow == nullptr) {
+	if (newWindow == nullptr) 
+	{
 		LOGE("GLFW window is null\n");
 		return EXIT_FAILURE;
 	}
@@ -24,24 +25,33 @@ int Vulkanised::VulkanRenderer::init(GLFWwindow* newWindow)
 		createSurface();
 		getPhysicalDevice();
 		createLogicalDevice();
-
-		// Create a mesh
-		std::vector<Vertex> meshVertices{
-			{{0.4, -0.4, 0.0}, {1.0f, 0.0f, 0.0f}},
-			{{0.4, 0.4, 0.0}, {0.0f, 1.0f, 0.0f}},
-			{{-0.4, 0.4, 0.0}, {0.0f, 0.0f, 1.0f}},
-
-			{{-0.4, 0.4, 0.0}, {0.0f, 0.0f, 1.0f}},
-			{{-0.4, -0.4, 0.0}, {1.0f, 1.0f, 0.0f}},
-			{{0.4, -0.4, 0.0}, {1.0f, 0.0f, 0.0f}}
-		};
-		m_FirstMesh = std::make_unique<Mesh>(m_MainDevice.physicalDevice, m_MainDevice.logicalDevice, &meshVertices);
-
 		createSwapchain();
 		createRenderPass();
 		createGraphicsPipeline();
 		createFramebuffers();
 		createCommandPool();
+
+		// Create a mesh
+		// Vertex data
+		std::vector<Vertex> meshVertices{
+			{{-0.1, -0.4, 0.0}, {1.0f, 0.0f, 0.0f}},	// 0
+			{{-0.1, 0.4, 0.0}, {0.0f, 1.0f, 0.0f}},		// 1
+			{{-0.9, 0.4, 0.0}, {0.0f, 0.0f, 1.0f}},		// 2
+			{{-0.9, -0.4, 0.0}, {1.0f, 1.0f, 0.0f}}		// 3
+		};
+
+		std::vector<Vertex> meshVertices2{
+			{{0.9, -0.4, 0.0}, {1.0f, 0.0f, 0.0f}},		// 0
+			{{0.9, 0.4, 0.0}, {0.0f, 1.0f, 0.0f}},		// 1
+			{{0.1, 0.4, 0.0}, {0.0f, 0.0f, 1.0f}},		// 2
+			{{0.1, -0.4, 0.0}, {1.0f, 1.0f, 0.0f}}		// 3
+		};
+
+		// Index data
+		std::vector<uint32_t> meshIndices{ {0, 1, 2, 2, 3, 0} };
+		m_MeshList.push_back(make_unique<Mesh>(m_MainDevice.physicalDevice, m_MainDevice.logicalDevice, m_GraphicsQueue, m_GraphicsCommandPool, &meshVertices, &meshIndices));
+		m_MeshList.push_back(make_unique<Mesh>(m_MainDevice.physicalDevice, m_MainDevice.logicalDevice, m_GraphicsQueue, m_GraphicsCommandPool, &meshVertices2, &meshIndices));
+
 		createCommandBuffers();
 		recordCommands();
 		createSynchronisation();
@@ -67,7 +77,9 @@ void Vulkanised::VulkanRenderer::draw()
 	uint32_t imageIndex{ 0 };
 	if (vkAcquireNextImageKHR(m_MainDevice.logicalDevice, m_Swapchain, std::numeric_limits<uint64_t>::max(), m_ImageAvailable[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to acquire next image");
+		constexpr const char* message{ "failed to acquire next image" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	// -- SUBMIT COMMAND BUFFER TO RENDER --
@@ -88,7 +100,9 @@ void Vulkanised::VulkanRenderer::draw()
 	// Submit command buffer to queue
 	if (vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_DrawFences[m_CurrentFrame]) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to submit command buffer to queue");
+		constexpr const char* message{ "failed to submit command buffer to queue" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	// -- PRESENT RENDERED IMAGE TO SCREEN --
@@ -103,7 +117,9 @@ void Vulkanised::VulkanRenderer::draw()
 	// Present image
 	if (vkQueuePresentKHR(m_PresentationQueue, &presentInfo) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to present image to presentation queue");
+		constexpr const char* message{ "failed to present image to presentation queue" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	// Get next frame (use % Utilities::Vulkan::c_MaxFrameDraws to keep value below Utilities::Vulkan::c_MaxFrameDraws)
@@ -116,8 +132,12 @@ void Vulkanised::VulkanRenderer::cleanup() noexcept
 	vkDeviceWaitIdle(m_MainDevice.logicalDevice);
 
 	// Destroy the meshes
-	if (m_FirstMesh) {
-		m_FirstMesh.reset();
+	if (!m_MeshList.empty()) 
+	{
+		for (auto& mesh : m_MeshList)
+		{
+			mesh.reset();
+		}
 	}
 
 	// Destroy semaphores and fences
@@ -233,7 +253,11 @@ void Vulkanised::VulkanRenderer::createInstance()
 {
 #ifdef _WIN32
 	if (Utilities::Vulkan::enableValidationLayers && !checkValidationLayerSupport())
-		throw std::runtime_error("validation layers requested, but not available!");
+	{
+		constexpr const char* message{ "validation layers requested, but not available!" };
+		LOGE(message);
+		throw std::runtime_error(message);
+	}
 
 #elif defined(__APPLE__)    //Validation layers on Mac sort of kinda working, but also not?
 	if (Utilities::Vulkan::enableValidationLayers && !checkValidationLayerSupport())
@@ -286,7 +310,9 @@ void Vulkanised::VulkanRenderer::createInstance()
 	// Check if instance extensions are supported...
 	if(!checkInstanceExtensionSupport(&instanceExtensions))
 	{
-		throw std::runtime_error("VkInstance does not support required extensions!");
+		constexpr const char* message{ "VkInstance does not support required extensions!" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
@@ -311,7 +337,9 @@ void Vulkanised::VulkanRenderer::createInstance()
 	// Create instance
 	if (vkCreateInstance(&createInfo, nullptr, &m_Instance) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Failed to create a Vulkan Instance!");
+		constexpr const char* message{ "Failed to create a Vulkan Instance!" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 }
 
@@ -353,7 +381,9 @@ void Vulkanised::VulkanRenderer::createLogicalDevice()
 	// Create the logical device for the given physical device
 	if (vkCreateDevice(m_MainDevice.physicalDevice, &deviceCreateInfo, nullptr, &m_MainDevice.logicalDevice) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Failed to create a Logical Device!");
+		constexpr const char* message{ "Failed to create a Logical Device!" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	// Queues are created at the same time as the device...
@@ -373,7 +403,9 @@ void Vulkanised::VulkanRenderer::setupDebugMessenger()
 
 	if (Utilities::Vulkan::CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to set up debug messenger!");
+		constexpr const char* message{ "failed to set up debug messenger!" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 	else
 	{
@@ -386,7 +418,9 @@ void Vulkanised::VulkanRenderer::createSurface()
 	// Create Surface (creates a surface create info struct, runs the create surface function, returns VkResult)
 	if (glfwCreateWindowSurface(m_Instance, m_Window.load().get(), nullptr, &m_Surface) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create a surface");
+		constexpr const char* message{ "failed to create a surface" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 }
 
@@ -452,7 +486,9 @@ void Vulkanised::VulkanRenderer::createSwapchain()
 	// Create actual swapchain
 	if (vkCreateSwapchainKHR(m_MainDevice.logicalDevice, &swapchainCreateInfo, nullptr, &m_Swapchain) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create a swapchain");
+		constexpr const char* message{ "failed to create a swapchain" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	// Store for later reference
@@ -542,7 +578,9 @@ void Vulkanised::VulkanRenderer::createRenderPass()
 
 	if (vkCreateRenderPass(m_MainDevice.logicalDevice, &renderPassCreateInfo, nullptr, &m_RenderPass) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create render pass!");
+		constexpr const char* message{ "failed to create render pass!" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 }
 
@@ -689,7 +727,9 @@ void Vulkanised::VulkanRenderer::createGraphicsPipeline()
 	// Create pipeline layout
 	if (vkCreatePipelineLayout(m_MainDevice.logicalDevice, &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create pipeline layout!");
+		constexpr const char* message{ "failed to create pipeline layout!" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	// -- DEPTH STENCIL TESTING --
@@ -719,7 +759,9 @@ void Vulkanised::VulkanRenderer::createGraphicsPipeline()
 	// Create graphics pipeline
 	if (vkCreateGraphicsPipelines(m_MainDevice.logicalDevice, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create pipeline(s)!");
+		constexpr const char* message{ "failed to create pipeline(s)!" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	// Destroy shader modules, no longer needed after pipeline created
@@ -750,7 +792,9 @@ void Vulkanised::VulkanRenderer::createFramebuffers()
 
 		if (vkCreateFramebuffer(m_MainDevice.logicalDevice, &framebufferCreateInfo, nullptr, &m_SwapchainFramebuffers[i]) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create a swapchain framebuffer");
+			constexpr const char* message{ "failed to create a swapchain framebuffer" };
+			LOGE(message);
+			throw std::runtime_error(message);
 		}
 	}
 }
@@ -767,7 +811,9 @@ void Vulkanised::VulkanRenderer::createCommandPool()
 	// Create a graphics queue family command pool
 	if (vkCreateCommandPool(m_MainDevice.logicalDevice, &poolCreateInfo, nullptr, &m_GraphicsCommandPool) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create command pool");
+		constexpr const char* message{ "failed to create command pool" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 }
 
@@ -786,7 +832,9 @@ void Vulkanised::VulkanRenderer::createCommandBuffers()
 	// Allocate command buffers and place handles in array of buffers
 	if (vkAllocateCommandBuffers(m_MainDevice.logicalDevice, &commandBufferAllocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to allocate command buffers");
+		constexpr const char* message{ "failed to allocate command buffers" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 }
 
@@ -817,7 +865,9 @@ void Vulkanised::VulkanRenderer::createSynchronisation()
 			//vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_RenderFinished[i]) != VK_SUCCESS ||
 			vkCreateFence(m_MainDevice.logicalDevice, &fenceCreateInfo, nullptr, &m_DrawFences[i]) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create image available semaphore(s) and/or draw fence(s)");
+			constexpr const char* message{ "failed to create image available semaphore(s) and/or draw fence(s)" };
+			LOGE(message);
+			throw std::runtime_error(message);
 		}
 	}
 
@@ -826,7 +876,9 @@ void Vulkanised::VulkanRenderer::createSynchronisation()
 	{
 		if (vkCreateSemaphore(m_MainDevice.logicalDevice, &semaphoreCreateInfo, nullptr, &m_RenderFinished[i]) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create render finished semaphore(s)");
+			constexpr const char* message{ "failed to create render finished semaphore(s)" };
+			LOGE(message);
+			throw std::runtime_error(message);
 		}
 	}
 }
@@ -858,7 +910,9 @@ void Vulkanised::VulkanRenderer::recordCommands()
 		// Start recording commands to command buffer!
 		if (vkBeginCommandBuffer(m_CommandBuffers[i], &commandBufferBeginInfo) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to start recording a command buffer");
+			constexpr const char* message{ "failed to start recording a command buffer" };
+			LOGE(message);
+			throw std::runtime_error(message);
 		}
 
 			// Begin render pass
@@ -867,12 +921,19 @@ void Vulkanised::VulkanRenderer::recordCommands()
 				// Bind pipeline to be used in render pass
 				vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
 
-				VkBuffer vertexBuffers[] = { m_FirstMesh->getVertexBuffer() };						// Buffers to bind
-				VkDeviceSize offsets[] = { 0 };													// Offsets into buffers being bound
-				vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, vertexBuffers, offsets);		// Command to bind vertex buffer before drawing with them
+				for (auto& mesh : m_MeshList)
+				{
+					VkBuffer vertexBuffers[] = { mesh->getVertexBuffer() };						// Buffers to bind
+					VkDeviceSize offsets[] = { 0 };												// Offsets into buffers being bound
+					vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, vertexBuffers, offsets);	// Command to bind vertex buffer before drawing with them
 
-				// Execute pipeline
-				vkCmdDraw(m_CommandBuffers[i], static_cast<uint32_t>(m_FirstMesh->getVertexCount()), 1, 0, 0);
+					// Bind mesh index buffer, with 0 offset and using the uint32_t type
+					vkCmdBindIndexBuffer(m_CommandBuffers[i], mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+					// Execute pipeline
+					//vkCmdDraw(m_CommandBuffers[i], static_cast<uint32_t>(m_FirstMesh->getVertexCount()), 1, 0, 0);
+					vkCmdDrawIndexed(m_CommandBuffers[i], static_cast<uint32_t>(mesh->getIndexCount()), 1, 0, 0, 0);
+				}
 
 			// End render pass
 			vkCmdEndRenderPass(m_CommandBuffers[i]);
@@ -880,7 +941,9 @@ void Vulkanised::VulkanRenderer::recordCommands()
 		// Stop recording to command buffer
 		if (vkEndCommandBuffer(m_CommandBuffers[i]) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to stop recording a command buffer");
+			constexpr const char* message{ "failed to stop recording a command buffer" };
+			LOGE(message);
+			throw std::runtime_error(message);
 		}
 	}
 }
@@ -894,7 +957,9 @@ void Vulkanised::VulkanRenderer::getPhysicalDevice()
 	// If no devices available, then none support Vulkan!
 	if (deviceCount == 0)
 	{
-		throw std::runtime_error("Can't find GPU's that support Vulkan instance!");
+		constexpr const char* message{ "Can't find GPU's that support Vulkan instance!" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	// Get list of physical devices
@@ -1264,7 +1329,9 @@ VkImageView Vulkanised::VulkanRenderer::createImageView(VkImage image, VkFormat 
 	VkImageView imageView;
 	if (vkCreateImageView(m_MainDevice.logicalDevice, &viewCreateInfo, nullptr, &imageView) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create an image view");
+		constexpr const char* message{ "failed to create an image view" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 	return imageView;
 }
@@ -1281,7 +1348,9 @@ VkShaderModule Vulkanised::VulkanRenderer::createShaderModule(const std::vector<
 
 	if (vkCreateShaderModule(m_MainDevice.logicalDevice, &shaderModuleCreateInfo, nullptr, &shaderModule) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create a shader module");
+		constexpr const char* message{ "failed to create a shader module" };
+		LOGE(message);
+		throw std::runtime_error(message);
 	}
 
 	return shaderModule;

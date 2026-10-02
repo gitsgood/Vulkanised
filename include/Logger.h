@@ -12,7 +12,8 @@
 
 #include "glaze/glaze.hpp"
 
-#include "Utilities.h"
+#include "utils/FileUtils.h"
+#include "utils/TimeUtils.h"
 
 // The macros we will use henceforth to log ANYTHING. We really did learn from the best
 #define LOGGER(type, fmt, ...)  Logger::getLoggerInstance()->logText(type, std::source_location::current(), fmt, __VA_ARGS__)

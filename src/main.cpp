@@ -20,7 +20,9 @@ namespace Vulkanised
 	{
 		if (glfwInit() == GLFW_FALSE)
 		{
-			throw std::runtime_error("Failed to initialize GLFW");
+			constexpr const char* message { "Failed to initialize GLFW" };
+			LOGE(message);
+			throw std::runtime_error(message);
 		}
 
 		// Set GLFW to not create an OpenGL context
@@ -30,8 +32,11 @@ namespace Vulkanised
 		// Create the raw pointer
 		GLFWwindow* rawWindow = glfwCreateWindow(width, height, wName.data(), nullptr, nullptr);
 
-		if (!rawWindow) {
-			throw std::runtime_error("Failed to create GLFW window");
+		if (!rawWindow) 
+		{
+			constexpr const char* message { "Failed to create GLFW window" };
+			LOGE(message);
+			throw std::runtime_error(message);
 		}
 
 		// Wrap it in a shared_ptr with a custom deleter
