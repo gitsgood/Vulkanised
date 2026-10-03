@@ -4,6 +4,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -25,6 +27,9 @@ public:
 	VulkanRenderer();
 
 	int init(GLFWwindow* newWindow);
+
+	inline void updateModel(glm::mat4 newModel) noexcept { mvp.model = newModel; }
+
 	void draw();
 	void cleanup() noexcept;
 
@@ -38,6 +43,13 @@ private:
 
 	// Scene objects
 	std::vector<std::unique_ptr<Mesh>> m_MeshList;
+
+	// Scene settings
+	struct ModelViewProjection {
+		glm::mat4 projection;
+		glm::mat4 view;
+		glm::mat4 model;
+	} mvp;
 
 	// Vulkan Components
 	// - Main
@@ -54,6 +66,15 @@ private:
 	std::vector<Utilities::Vulkan::SwapchainImage> m_SwapchainImages;
 	std::vector<VkFramebuffer> m_SwapchainFramebuffers;
 	std::vector<VkCommandBuffer> m_CommandBuffers;
+
+	// - Descriptors
+	VkDescriptorSetLayout m_DescriptorSetLayout;
+
+	VkDescriptorPool m_DescriptorPool;
+	std::vector<VkDescriptorSet> m_DescriptorSets;
+
+	std::vector<VkBuffer> m_UniformBuffer;
+	std::vector<VkDeviceMemory> m_UniformBufferMemory;
 
 	// - Pipeline
 	VkPipeline m_GraphicsPipeline;
@@ -89,11 +110,18 @@ private:
 	void createSurface();
 	void createSwapchain();
 	void createRenderPass();
+	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
 	void createFramebuffers();
 	void createCommandPool();
 	void createCommandBuffers();
 	void createSynchronisation();
+
+	void createUniformBuffers();
+	void createDescriptorPool();
+	void createDescriptorSets();
+
+	void updateUniformBuffer(uint32_t imageIndex);			// Called in draw()
 
 	// - Record functions
 	void recordCommands();

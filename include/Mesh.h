@@ -27,11 +27,11 @@ public:
 		std::vector<uint32_t>* indices
 	);
 
-	[[nodiscard]] inline size_t getVertexCount() const noexcept { return m_VertexCount; }
-	[[nodiscard]] inline VkBuffer getVertexBuffer() const noexcept { return m_VertexBuffer; }
+	[[nodiscard]] inline constexpr size_t getVertexCount() const noexcept { return m_VertexCount; }
+	[[nodiscard]] inline constexpr VkBuffer getVertexBuffer() const noexcept { return m_VertexBuffer; }
 
-	[[nodiscard]] inline size_t getIndexCount() const noexcept {return m_IndexCount; }
-	[[nodiscard]] inline VkBuffer getIndexBuffer() const noexcept { return m_IndexBuffer; }
+	[[nodiscard]] inline constexpr size_t getIndexCount() const noexcept {return m_IndexCount; }
+	[[nodiscard]] inline constexpr VkBuffer getIndexBuffer() const noexcept { return m_IndexBuffer; }
 
 	~Mesh();
 
