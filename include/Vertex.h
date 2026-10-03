@@ -15,7 +15,7 @@ struct Vertex
 	glm::vec3 col;		// Vertex colour (r, g, b)
 
 	// How the data for a single vertex (including info such as position, colour, texture coordinates, normals, etc...) is as a whole
-	static inline VkVertexInputBindingDescription getBindingDescription() noexcept
+	[[nodiscard]] static inline VkVertexInputBindingDescription getBindingDescription() noexcept
 	{
 		VkVertexInputBindingDescription bindingDescription{};
 		bindingDescription.binding = 0;									// Can bind multiple streams of data, this defines which one
@@ -28,7 +28,7 @@ struct Vertex
 	}
 
 	// How the data for an attribute is defined within a vertex
-	static inline std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() noexcept
+	[[nodiscard]] static inline std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() noexcept
 	{
 		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
 

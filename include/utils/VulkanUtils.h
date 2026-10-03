@@ -52,7 +52,7 @@ namespace Vulkanised
                 int presentationFamily{ -1 };   // Location of presentation queue family
 
                 // Check if queue families are valid
-                bool isValid() const
+                [[nodiscard]] bool isValid() const noexcept
                 {
                     return graphicsFamily >= 0 && presentationFamily >= 0;
                 }
@@ -71,7 +71,7 @@ namespace Vulkanised
                 VkImageView imageView;
             };
 
-            inline uint32_t findMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t allowedTypes, VkMemoryPropertyFlags properties) noexcept
+            [[nodiscard]] inline uint32_t findMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t allowedTypes, VkMemoryPropertyFlags properties) noexcept
             {
                 // Get properties of physical device memory
                 VkPhysicalDeviceMemoryProperties memoryProperties;
