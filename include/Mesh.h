@@ -14,6 +14,10 @@
 namespace Vulkanised
 {
 
+struct UboModel {
+	glm::mat4 model;
+};
+
 class Mesh
 {
 public:
@@ -27,6 +31,9 @@ public:
 		std::vector<uint32_t>* indices
 	);
 
+	void setModel(glm::mat4 newModel) noexcept;
+	[[nodiscard]] UboModel getModel() const noexcept;
+
 	[[nodiscard]] inline constexpr size_t getVertexCount() const noexcept { return m_VertexCount; }
 	[[nodiscard]] inline constexpr VkBuffer getVertexBuffer() const noexcept { return m_VertexBuffer; }
 
@@ -39,6 +46,8 @@ public:
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
 private:
+	UboModel m_UboModel;
+
 	size_t m_VertexCount{ 0 };
 	VkBuffer m_VertexBuffer;
 	VkDeviceMemory m_VertexBufferMemory;

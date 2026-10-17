@@ -122,8 +122,7 @@ private:
     // For debugging purposes. Could eventually remove this completely down the line.
     void printBooleans() noexcept;
 
-    // Deprecated function.
-    [[deprecated]] void logInternal(const std::string& input, LogType inColor, std::source_location callSite) noexcept;
+    [[deprecated]] void logInternal(const std::string& input, LogType inColor, std::source_location callSite) noexcept; // Deprecated function.
     void logInternal(const LogEntry& entry) noexcept;
 
     // Private constructors to strictly control instantiation of the class.
