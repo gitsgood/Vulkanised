@@ -9,6 +9,9 @@
 #include <mutex>
 #include <print>            // Also includes format somewhere in there
 #include <chrono>
+#include <queue>
+#include <condition_variable>
+#include <thread>
 
 #include "glaze/glaze.hpp"
 
@@ -53,6 +56,14 @@ public:
     {
         //writeSettingsFile();  // For now we will only write the settings when we try to read them (if they dont exist, and once). If we make an editor we can refactor this later.
         logText(LogType::HIGHLIGHT, std::source_location::current(), "Goodnight logger...");
+
+        // We are shifting the logger to ressemble more a channel pattern. Namely, I intend to process every log message in another thread.
+        m_Running = false;
+        m_ConditionVariable.notify_one(); // Wake up thread to die
+        if (m_WorkerThread.joinable()) {
+            m_WorkerThread.join();
+        }
+
         m_File << Utilities::File::c_LogSeparation;
     }
 
@@ -66,27 +77,33 @@ public:
         VALIDATION
     };
 
-    std::string getTimestamp() noexcept;
+    [[nodiscard]] std::string getTimestamp() noexcept;
 
     // I want to be able to log things with modern formatting abilities. This here function takes care of it.
     template <typename... Args>
     void logText(LogType type, std::source_location loc, std::string_view fmt, Args&&... args)
     {
         std::string formattedMessage = std::vformat(fmt, std::make_format_args(args...));
-        logInternal(formattedMessage, type, loc);
-    }
-
-    // A simple overload in case I don't feel like specifying what LogType I want, without needing to mess with the sensitive parameter structure...
-    template <typename... Args>
-    void logText(std::source_location loc, std::string_view fmt, Args&&... args)
-    {
-        // We simply forward everything to the first version, adding a default of LogType::LOG
-        logText(LogType::LOG, loc, fmt, std::forward<Args>(args)...);
+        //logInternal(formattedMessage, type, loc); // We no longer log when we call logText, we will just push it to a queue.
+        pushToQueue(type, loc, std::move(formattedMessage));
     }
 
 private:
-    // This is supposed to lock access to the logger if one thread accesses the log function (so for example, another thread wont access it at the same time).
-    std::mutex m_Mutex;
+    struct LogEntry {
+        LogType type;
+        std::source_location loc;
+        std::string message;
+    };
+
+    // Async components
+    std::queue<LogEntry> m_Queue;
+    std::mutex m_QueueMutex;
+    std::condition_variable m_ConditionVariable;
+    std::thread m_WorkerThread;
+    std::atomic<bool> m_Running{ true };
+
+    void pushToQueue(LogType type, std::source_location loc, std::string&& msg);    // Just push to the damn queue instead of spending time to log!   
+    void processQueue();    // The function that loops in the logging thread, doing all the actual printing to console or file (hopefully improving the vulkan thread)
 
     // One ofstream instance.
     std::ofstream m_File;
@@ -105,7 +122,9 @@ private:
     // For debugging purposes. Could eventually remove this completely down the line.
     void printBooleans() noexcept;
 
-    void logInternal(const std::string& input, LogType inColor, std::source_location callSite) noexcept;
+    // Deprecated function.
+    [[deprecated]] void logInternal(const std::string& input, LogType inColor, std::source_location callSite) noexcept;
+    void logInternal(const LogEntry& entry) noexcept;
 
     // Private constructors to strictly control instantiation of the class.
     Logger() noexcept
@@ -119,8 +138,13 @@ private:
         {
             m_File.open(std::filesystem::path(Utilities::File::c_Path) / Utilities::File::c_LogFileName);
         }
+
+        // ACTUALLY start the damn thread lmao 
+        m_WorkerThread = std::thread(&Logger::processQueue, this);
+
         //printBooleans();
-        logText(LogType::HIGHLIGHT, std::source_location::current(), "Logger initialised...");
+
+        logText(LogType::HIGHLIGHT, std::source_location::current(), "Logger initialised (now in async!)...");
     }
 
     // Delete the copy constructor and assignment operator, since its a static class and shouldn't exist anyways.
