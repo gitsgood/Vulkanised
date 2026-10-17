@@ -69,6 +69,7 @@ private:
 
 	// - Descriptors
 	VkDescriptorSetLayout m_DescriptorSetLayout;
+	VkPushConstantRange m_PushConstantRange;
 
 	VkDescriptorPool m_DescriptorPool;
 	std::vector<VkDescriptorSet> m_DescriptorSets;
@@ -82,9 +83,9 @@ private:
 	std::vector<VkBuffer> m_ModelDUniformBuffer;
 	std::vector<VkDeviceMemory> m_ModelDUniformBufferMemory;
 
-	VkDeviceSize m_MinUniformBufferOffset;
-	size_t m_ModelUniformAlignment;
-	UboModel* m_ModelTransferSpace;
+	//VkDeviceSize m_MinUniformBufferOffset;
+	//size_t m_ModelUniformAlignment;
+	//UboModel* m_ModelTransferSpace;
 
 	// - Pipeline
 	VkPipeline m_GraphicsPipeline;
@@ -121,6 +122,7 @@ private:
 	void createSwapchain();
 	void createRenderPass();
 	void createDescriptorSetLayout();
+	void createPushConstantRange();
 	void createGraphicsPipeline();
 	void createFramebuffers();
 	void createCommandPool();
@@ -134,7 +136,7 @@ private:
 	void updateUniformBuffers(uint32_t imageIndex);			// Called in draw()
 
 	// - Record functions
-	void recordCommands();
+	void recordCommands(uint32_t currentImage);
 
 	// - Get functions
 	void getPhysicalDevice();

@@ -12,21 +12,11 @@ Vulkanised::Mesh::Mesh(
 		std::vector<Vertex>* vertices,
 		std::vector<uint32_t>* indices
 	)
-	: m_UboModel(glm::mat4(1.0f)), m_VertexCount(vertices->size()), m_IndexCount(indices->size()), m_PhysicalDevice(newPhysicalDevice), m_LogicalDevice(newDevice)
+	: m_Model(glm::mat4(1.0f)), m_VertexCount(vertices->size()), m_IndexCount(indices->size()), m_PhysicalDevice(newPhysicalDevice), m_LogicalDevice(newDevice)
 {
 	LOG("A new mesh joins the ranks...");
 	createVertexBuffer(transferQueue, transferCommandPool, vertices);
 	createIndexBuffer(transferQueue, transferCommandPool, indices);
-}
-
-void Vulkanised::Mesh::setModel(glm::mat4 newModel) noexcept
-{
-	m_UboModel.model = newModel;
-}
-
-Vulkanised::UboModel Vulkanised::Mesh::getModel() const noexcept
-{
-	return m_UboModel;
 }
 
 Vulkanised::Mesh::~Mesh()
