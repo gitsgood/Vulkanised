@@ -29,7 +29,7 @@ namespace Vulkanised
 
 		// Set GLFW to not create an OpenGL context
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 		// Create the raw pointer
 		GLFWwindow* rawWindow = glfwCreateWindow(width, height, wName.data(), nullptr, nullptr);
@@ -60,7 +60,7 @@ int main()
 	//Utilities::Time::timeIt("Initialising logger and logging", [&]() { Logger::getLoggerInstance()->logText(Logger::LogType::HIGHLIGHT, std::source_location::current(), "Vulkanised hath started!"); });
 
 	// Create window
-	initWindow("Test Window", 800, 600);
+	initWindow("Test Window", 1366, 768);
 
 	// Create Vulkan renderer instance and initialize it with the window
 	if (renderer.init(window.load().get()) == EXIT_FAILURE)
@@ -88,10 +88,10 @@ int main()
 		glm::mat4 firstModel(1.0f);
 		glm::mat4 secondModel(1.0f);
 
-		firstModel = glm::translate(firstModel, glm::vec3(0.0f, 0.0f, -2.5f));
+		firstModel = glm::translate(firstModel, glm::vec3(-1.0f, 0.0f, -1.0f));
 		firstModel = glm::rotate(firstModel, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
 
-		secondModel = glm::translate(secondModel, glm::vec3(0.0f, 0.0f, -3.0f));
+		secondModel = glm::translate(secondModel, glm::vec3(1.0f, 0.0f, -3.0f));
 		secondModel = glm::rotate(secondModel, glm::radians(-angle * 10), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		renderer.updateModel(0, firstModel);

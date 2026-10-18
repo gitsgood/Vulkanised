@@ -28,11 +28,14 @@ public:
 		VkQueue transferQueue, 
 		VkCommandPool transferCommandPool, 
 		std::vector<Vertex>* vertices,
-		std::vector<uint32_t>* indices
+		std::vector<uint32_t>* indices,
+		int newTexId
 	);
 
 	inline void setModel(glm::mat4 newModel) noexcept { m_Model.model = newModel; }
 	[[nodiscard]] inline const Model& getModel() const noexcept { return m_Model; }
+
+	[[nodiscard]] inline int getTexId() const noexcept { return m_TexId; }
 
 	[[nodiscard]] inline constexpr size_t getVertexCount() const noexcept { return m_VertexCount; }
 	[[nodiscard]] inline constexpr VkBuffer getVertexBuffer() const noexcept { return m_VertexBuffer; }
@@ -47,6 +50,7 @@ public:
 	Mesh& operator=(const Mesh&) = delete;
 private:
 	Model m_Model;
+	int m_TexId;
 
 	size_t m_VertexCount{ 0 };
 	VkBuffer m_VertexBuffer;

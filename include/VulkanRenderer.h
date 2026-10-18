@@ -14,6 +14,8 @@
 #include <set>
 #include <algorithm>
 
+#include <stb_image.h>
+
 #include "Utilities.h"
 #include "Logger.h"
 #include "Vertex.h"
@@ -71,12 +73,17 @@ private:
 	VkDeviceMemory m_DepthBufferImageMemory;
 	VkImageView m_DepthBufferImageView;
 
+	VkSampler m_TextureSampler;
+
 	// - Descriptors
 	VkDescriptorSetLayout m_DescriptorSetLayout;
+	VkDescriptorSetLayout m_SamplerSetLayout;
 	VkPushConstantRange m_PushConstantRange;
 
 	VkDescriptorPool m_DescriptorPool;
+	VkDescriptorPool m_SamplerDescriptorPool;
 	std::vector<VkDescriptorSet> m_DescriptorSets;
+	std::vector<VkDescriptorSet> m_SamplerDescriptorSets;
 
 	//std::vector<VkBuffer> m_UniformBuffer;
 	//std::vector<VkDeviceMemory> m_UniformBufferMemory;
@@ -90,6 +97,11 @@ private:
 	//VkDeviceSize m_MinUniformBufferOffset;
 	//size_t m_ModelUniformAlignment;
 	//UboModel* m_ModelTransferSpace;
+
+	// - Assets
+	std::vector<VkImage> m_TextureImages;
+	std::vector<VkDeviceMemory> m_TextureImageMemory;
+	std::vector<VkImageView> m_TextureImageViews;
 
 	// - Pipeline
 	VkPipeline m_GraphicsPipeline;
@@ -132,16 +144,22 @@ private:
 	void createFramebuffers();
 	void createCommandPool();
 	void createCommandBuffers();
-	void createSynchronisation();
+	void createTextureSampler();
 
 	void createUniformBuffers();
 	void createDescriptorPool();
 	void createDescriptorSets();
 
+	void createSynchronisation();
+
 	void updateUniformBuffers(uint32_t imageIndex);			// Called in draw()
 
+	// - Resizable window related
+	void cleanupSwapchain();	// Called in draw or cleanup
+	void recreateSwapchain();	// Called in draw, if window size changed
+
 	// - Record functions
-	void recordCommands(uint32_t currentImage);
+	void recordCommands(uint32_t currentImage);				// Now also called in draw()
 
 	// - Get functions
 	void getPhysicalDevice();
@@ -177,6 +195,13 @@ private:
 	VkImage createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags useFlags, VkMemoryPropertyFlags propFlags, VkDeviceMemory* imageMemory) const;
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) const;
 	VkShaderModule createShaderModule(const std::vector<char>& code) const;
+
+	int createTextureImage(std::string_view fileName);
+	int createTexture(std::string_view fileName);
+	int createTextureDescriptor(VkImageView textureImage);
+
+	// -- Loader Functions
+	stbi_uc* loadTextureFile(std::string_view fileName, int* width, int* height, VkDeviceSize* imageSize);
 };
 }
 

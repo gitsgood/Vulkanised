@@ -14,6 +14,9 @@ add_subdirectory(external/glfw-3.5.1)
 # Glaze is a fast json library for cpp. It requires c++ 23
 add_subdirectory(external/glaze)
 
+# stb_image is header only, but I'd still like to add it like every other library, for consistency
+add_subdirectory(external/stb_image)
+
 # Ask CMake to find the Vulkan SDK installed on the computer
 find_package(Vulkan REQUIRED)
 
@@ -103,9 +106,9 @@ endif()
 
 # Link the libraries (if not on Window, we'll probably not be getting glm with vulkan)
 if(NOT MSVC)
-    target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze glm::glm)
+    target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze glm::glm stb_image)
 else()
-    target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze)
+    target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze stb_image)
 endif()
 
 # Shader compilation, hopefully cross-platform
