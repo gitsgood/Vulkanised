@@ -1,10 +1,11 @@
 #ifndef VULKANUTILS_H
 #define VULKANUTILS_H
 
-#include <vulkan/vulkan.h>
 #include <vector>
 
-#include "Logger.h"
+#include <vulkan/vulkan.h>
+
+#include "Vulkanised/Logger.h"
 
 namespace Vulkanised::Utilities::Vulkan
 {

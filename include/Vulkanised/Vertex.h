@@ -1,9 +1,10 @@
 #ifndef VERTEX_H
 #define VERTEX_H
 
+#include <array>
+
 #include <glm/glm.hpp>
 #include <vulkan/vulkan_core.h>
-#include <array>
 
 namespace Vulkanised 
 {

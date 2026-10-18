@@ -1,16 +1,4 @@
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#include <stdio.h>
-#include <stdexcept>
-#include <vector>
-#include <memory>
-#include <atomic>
-#include <string_view>
-
-#include "VulkanRenderer.h"
+#include "Vulkanised/VulkanRenderer.h"
 
 namespace Vulkanised
 {

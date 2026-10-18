@@ -57,12 +57,12 @@ endif()
 # Set source files...
 set(SOURCES
     src/main.cpp
-    include/Utilities.h
-    include/utils/VulkanUtils.h include/utils/TimeUtils.h   include/utils/FileUtils.h   include/utils/CrossPlatUtils.h
-    include/Logger.h            src/Logger.cpp
-    include/VulkanRenderer.h    src/VulkanRenderer.cpp
-    include/Vertex.h
-    include/Mesh.h              src/Mesh.cpp
+    include/Vulkanised/Utilities.h
+    include/Vulkanised/utils/VulkanUtils.h include/Vulkanised/utils/TimeUtils.h   include/Vulkanised/utils/FileUtils.h   include/Vulkanised/utils/CrossPlatUtils.h
+    include/Vulkanised/Logger.h            src/Logger.cpp
+    include/Vulkanised/VulkanRenderer.h    src/VulkanRenderer.cpp
+    include/Vulkanised/Vertex.h
+    include/Vulkanised/Mesh.h              src/Mesh.cpp
 )
 
 # all shader and script files shown in IDE
@@ -72,10 +72,22 @@ file(GLOB SHADER_FILES
 )
 
 # Define your executable using the SOURCES variable
-add_executable(${PROJECT_NAME} ${SOURCES} ${SHADER_FILES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES} ${SHADER_FILES})
+
+# Precompile header lets goo
+target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
 
 # Tell CMake to actually bother including the headers in my own project (HAS to be after "add_executable")
-target_include_directories(${PROJECT_NAME} PRIVATE include)
+#target_include_directories(${PROJECT_NAME} PRIVATE include)
+
+# Define include directories with SCOPES
+target_include_directories(${PROJECT_NAME} 
+    PUBLIC 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE 
+        src/
+)
 
 # More is more.
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -111,20 +123,23 @@ else()
     target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan glaze::glaze stb_image)
 endif()
 
-# Shader compilation, hopefully cross-platform
+# Define the directories
+set(SHADER_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders")
+
+# Ensure the output directory exists
+file(MAKE_DIRECTORY ${SHADER_BIN_DIR})
+
 if(APPLE)
     add_custom_target(CompileShaders
         COMMENT "Compiling Vulkan shaders for macOS"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
-        COMMAND "${Vulkan_GLSLC_EXECUTABLE}" "shader.vert" -o "vert.spv"
-        COMMAND "${Vulkan_GLSLC_EXECUTABLE}" "shader.frag" -o "frag.spv"
+        COMMAND "${Vulkan_GLSLC_EXECUTABLE}" "${SHADER_SRC_DIR}/shader.vert" -o "${SHADER_SRC_DIR}/vert.spv"
+        COMMAND "${Vulkan_GLSLC_EXECUTABLE}" "${SHADER_SRC_DIR}/shader.frag" -o "${SHADER_SRC_DIR}/frag.spv"
     )
 elseif(MSVC)
     add_custom_target(CompileShaders
         COMMENT "Compiling Vulkan shaders for Windows"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
-        COMMAND "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe" -V "shader.vert" -o "vert.spv"
-        COMMAND "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe" -V "shader.frag" -o "frag.spv"
+        COMMAND "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe" -V "${SHADER_SRC_DIR}/shader.vert" -o "${SHADER_SRC_DIR}/vert.spv"
+        COMMAND "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe" -V "${SHADER_SRC_DIR}/shader.frag" -o "${SHADER_SRC_DIR}/frag.spv"
     )
 endif()
 
@@ -138,3 +153,6 @@ endif()
 #endif()
 
 add_dependencies(${PROJECT_NAME} CompileShaders)
+
+# This tells anyone who includes this directory where the assets are
+set(VULKANISED_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "Path to Vulkanised assets")

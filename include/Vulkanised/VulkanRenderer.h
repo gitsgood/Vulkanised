@@ -1,11 +1,6 @@
 #ifndef VULKANRENDERER_H
 #define VULKANRENDERER_H
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -15,6 +10,9 @@
 #include <algorithm>
 
 #include <stb_image.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "Utilities.h"
 #include "Logger.h"
