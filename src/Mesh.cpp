@@ -13,7 +13,7 @@ Vulkanised::Mesh::Mesh(
 		std::vector<uint32_t>* indices,
 		int newTexId
 	)
-	: m_TexId(newTexId), m_Model(glm::mat4(1.0f)), m_VertexCount(vertices->size()), m_IndexCount(indices->size()), m_PhysicalDevice(newPhysicalDevice), m_LogicalDevice(newDevice)
+	: m_Model(glm::mat4(1.0f)), m_TexId(newTexId), m_VertexCount(vertices->size()), m_IndexCount(indices->size()), m_PhysicalDevice(newPhysicalDevice), m_LogicalDevice(newDevice)
 {
 	LOG("A new mesh joins the ranks...");
 	createVertexBuffer(transferQueue, transferCommandPool, vertices);

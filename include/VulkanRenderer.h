@@ -30,7 +30,7 @@ public:
 
 	int init(GLFWwindow* newWindow);
 
-	inline void updateModel(int modelId, glm::mat4 newModel) noexcept { if (modelId >= m_MeshList.size()) return; m_MeshList[modelId]->setModel(newModel); }
+	inline void updateModel(int modelId, glm::mat4 newModel) noexcept { if (static_cast<size_t>(modelId) >= m_MeshList.size()) return; m_MeshList[modelId]->setModel(newModel); }
 
 	void draw();
 	void cleanup() noexcept;
