@@ -56,7 +56,7 @@ file(GLOB SHADER_FILES CONFIGURE_DEPENDS
 )
 
 # Define your executable using the SOURCES variable
-add_executable(${PROJECT_NAME} ${SOURCES} ${SHADER_FILES})
+add_library(${PROJECT_NAME} STATIC ${SOURCES} ${SHADER_FILES})
 
 # Precompile header lets goo
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
@@ -110,7 +110,7 @@ if(NOT MSVC)
     list(APPEND LIB_LIST glm::glm)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${LIB_LIST})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${LIB_LIST})
 
 # Define the directories
 set(SHADER_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders")
